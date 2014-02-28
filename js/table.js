@@ -4,9 +4,10 @@
 
 
 $('#' + tableDiv.id).handsontable({
-  minSpareRows: 20,
+  minSpareRows: 30,
   minSpareCols: 20,
+  height: 500,
   rowHeaders: true,
   colHeaders: true,
-  contextMenu: true
+  outsideClickDeselects: false
 });
