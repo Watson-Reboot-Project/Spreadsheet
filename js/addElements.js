@@ -107,6 +107,12 @@ container.appendChild(buttonDiv);
 $(document).ready(function() {
 	var offset = $("#" + buttonDiv.id).offset();
 	$("#" + buttonDiv.id).offset({top: offset.top+55, left : offset.left});
+	
+	//button listeners
+	$("#" + undoButton.id).click(function() { undo(); });
+	$("#" + redoButton.id).click(function() { redo(); });
+	$("#" + sumButton.id).click(function() { sum(); });
+	$("#" + cutButton.id).click(function() { cut(); });
 });
 
 
