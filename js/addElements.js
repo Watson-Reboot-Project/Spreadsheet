@@ -3,13 +3,25 @@
  * */
 var figNum = 0;
 
-//Div to hold spreadsheet
+//div for first row
+var row_1 = document.createElement('div');
+row_1.id = "row1" + figNum;
+row_1.className = "row";
+
+//Div to restrict with of spreadsheet
 var tableHolder = document.createElement('div');
 tableHolder.className = "col-md-6";
 
-//Div for spreadsheet
+//Spreadsheet div
 var tableDiv = document.createElement('div');
 tableDiv.id = "table" + figNum;
+
+//input for cell functions
+var input = document.createElement('input');
+input.id = "input" + figNum;
+input.style.width = "600px";
+input.type = "text";
+input.name = "Functions";
 
 //Div for buttons
 var buttonDiv = document.createElement('div');
@@ -85,6 +97,7 @@ formatButton.innerHTML = "Format";
 
 
 //Append everything that needs appending
+//Button appends
 buttonDiv.appendChild(cutButton);
 buttonDiv.appendChild(copyButton);
 buttonDiv.appendChild(pasteButton);
@@ -97,12 +110,14 @@ buttonDiv.appendChild(sumButton);
 buttonDiv.appendChild(averageButton);
 //buttonDiv.appendChild(sep3);			//Ask Mike if he likes these better in
 buttonDiv.appendChild(formatButton);
-
 tableHolder.appendChild(tableDiv);
 
+row_1.appendChild(tableHolder);
+row_1.appendChild(buttonDiv);
+
 var container = document.getElementById("container");
-container.appendChild(tableHolder);
-container.appendChild(buttonDiv);
+container.appendChild(input);
+container.appendChild(row_1);
 
 $(document).ready(function() {
 	var offset = $("#" + buttonDiv.id).offset();
