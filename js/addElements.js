@@ -128,6 +128,15 @@ $(document).ready(function() {
 	$("#" + redoButton.id).click(function() { redo(); });
 	$("#" + sumButton.id).click(function() { sum(); });
 	$("#" + cutButton.id).click(function() { cut(); });
+	$("#" + copyButton.id).click(function() { copy(); });
+	$("#" + pasteButton.id).click(function() { paste(); });
+	$("#" + clearButton.id).click(function() { clear(); });
+	$("#" + averageButton.id).click(function() { average(); });
+	
+	//Cut event listener
+	$(document).bind('cut', function() {
+		cut();
+	});
 });
 
 
