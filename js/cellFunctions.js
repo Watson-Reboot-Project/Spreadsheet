@@ -123,26 +123,31 @@ function clear() {
 
 //Returns a selection in format [top, left, bottom, right]
 function topLeft(selected) {
-	var newSelect = [0,0,0,0];
-	if(selected[0] < selected[2]) {
-		newSelect[0] = selected[0];
-		newSelect[2] = selected[2];
+	if(selected != undefined) {
+		var newSelect = [0,0,0,0];
+		if(selected[0] < selected[2]) {
+			newSelect[0] = selected[0];
+			newSelect[2] = selected[2];
+		}
+		else {
+			newSelect[0] = selected[2];
+			newSelect[2] = selected[0];
+		}
+		if(selected[1] < selected[3]) {
+			newSelect[1] = selected[1];
+			newSelect[3] = selected[3];
+		}
+		else {
+			newSelect[1] = selected[3];
+			newSelect[3] = selected[1];
+		}
+		return newSelect;
 	}
-	else {
-		newSelect[0] = selected[2];
-		newSelect[2] = selected[0];
-	}
-	if(selected[1] < selected[3]) {
-		newSelect[1] = selected[1];
-		newSelect[3] = selected[3];
-	}
-	else {
-		newSelect[1] = selected[3];
-		newSelect[3] = selected[1];
-	}
-	return newSelect;
 }
 
+function changeInput(text) {
+	$("#" + input.id).val(text);
+}
 
 
 

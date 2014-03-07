@@ -137,6 +137,14 @@ $(document).ready(function() {
 	$(document).bind('cut', function() {
 		cut();
 	});
+	
+	$(document).on('click', function(evt) {
+		var selected = topLeft(ht.getSelected());
+		if(selected != undefined) {
+			var data = ht.getDataAtCell(selected[0], selected[1]);
+			if(data != null) changeInput(data);
+		}
+	});
 });
 
 
