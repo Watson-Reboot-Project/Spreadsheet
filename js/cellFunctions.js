@@ -78,7 +78,7 @@ function cut() {
 	if (ht.getSelected() != undefined) {
 		var selected = topLeft(ht.getSelected());
 		tempCopy = ht.getData(selected[0], selected[1], selected[2], selected[3]);
-		for(var i = Number(selected[0]); i <= Number(selected[2]); i++) {
+		for(var i = selected[0]; i <= selected[2]; i++) {
 			for(var y = selected[1]; y <= selected[3]; y++) {
 				ht.setDataAtCell(i, y, null, true);
 			}
@@ -89,7 +89,6 @@ function cut() {
 //Handles the copy operation
 function copy() {
 	if (ht.getSelected() != undefined) {
-		console.log("copy");
 		var selected = topLeft(ht.getSelected());
 		tempCopy = ht.getData(selected[0], selected[1], selected[2], selected[3]);
 	}
@@ -109,10 +108,15 @@ function paste() {
 
 //Handles the clear operation
 function clear() {
-	var selected = ht.getSelected();
-	for(var i = Number(selected[0]); i <= Number(selected[2]); i++) {
-		for(var y = selected[1]; y <= selected[3]; y++) {
-			ht.setDataAtCell(i, y, null, true);
+	var selected = topLeft(ht.getSelected());
+	var data = ht.getData(selected[0], selected[1], selected[2], selected[3]);
+	if(selected != undefined) {
+		for(var i = selected[0]; i <= selected[2]; i++) {
+			if(!ht.isEmptyRow(i)) {
+				for(var y = selected[1]; y <= selected[3]; y++) {
+					if(ht.getDataAtCell(i, y) != null) ht.setDataAtCell(i, y, null, true);
+				}
+			}
 		}
 	}
 }
