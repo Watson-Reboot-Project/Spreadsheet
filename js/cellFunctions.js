@@ -100,7 +100,7 @@ function paste() {
 	if(tempCopy != undefined && selected != undefined) {
 		for(var i = selected[0]; i < tempCopy.length + selected[0]; i++) {
 			for(var y = selected[1]; y < tempCopy[0].length + selected[1]; y++) {
-				ht.setDataAtCell(i, y, tempCopy[i-selected[0]][y-selected[1]], true);
+				if(i < 30) ht.setDataAtCell(i, y, tempCopy[i-selected[0]][y-selected[1]], true);
 			}
 		}
 	}
@@ -145,8 +145,19 @@ function topLeft(selected) {
 	}
 }
 
+//Changes text in intput bar
 function changeInput(text) {
 	$("#" + input.id).val(text);
+}
+
+//Refreshes data in cellData with spreadsheet
+function cellRefresh() {
+	for(var i = 0; i < 30; i++) {
+		for(var y = 0; y < 20; y++) {
+			var data = ht.getDataAtCell(i, y);
+			if(data != null) cellData[i][y] = data;
+		}
+	}
 }
 
 
