@@ -4,7 +4,7 @@
 
 //global variables
 var currSelect;
-var cellData = new Array(); //Not sure if this idea will work...
+var cellFunction = new Array();
 
 $('#' + tableDiv.id).handsontable({
   minSpareRows: 30,
@@ -19,11 +19,6 @@ $('#' + tableDiv.id).handsontable({
 
 //On page load..
 $(document).ready(function() {
-	//Holds copy of every cell. This is for use with the input bar or when users are editing a function in a cell.
-	for(var i = 0; i < 30; i++) {
-		cellData[cellData.length] = new Array(20);
-	}
-	
 	//set offset for buttons
 	var offset = $("#" + buttonDiv.id).offset();
 	$("#" + buttonDiv.id).offset({top: offset.top+55, left : offset.left});
@@ -51,7 +46,6 @@ $(document).ready(function() {
 			var data = ht.getDataAtCell(selected[0], selected[1]);
 			if(data != null) changeInput(data);
 		}
-		cellRefresh();
 	});
 	
 	//Listens for any keypresses. Won't detect enter keypress.
@@ -62,7 +56,6 @@ $(document).ready(function() {
 			var data = ht.getDataAtCell(selected[0], selected[1]);
 			changeInput(data);
 		}
-		cellRefresh();
 	});
 	
 	//Detect Enter key and trigger keypress

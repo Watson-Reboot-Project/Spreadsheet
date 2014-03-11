@@ -150,14 +150,11 @@ function changeInput(text) {
 	$("#" + input.id).val(text);
 }
 
-//Refreshes data in cellData with spreadsheet
-function cellRefresh() {
-	for(var i = 0; i < 30; i++) {
-		for(var y = 0; y < 20; y++) {
-			var data = ht.getDataAtCell(i, y);
-			if(data != null) cellData[i][y] = data;
-		}
-	}
+//Keeps track of all function cells (Cells with =SUM() or =AVG())
+function newCellFunction(rowNum, cellNum, funcString) {
+	this.rowNum = rowNum;
+	this.cellNum = cellNum;
+	this.funcString = funcString;
 }
 
 
