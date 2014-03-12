@@ -35,6 +35,8 @@ function sum() {
 		$("#" + tableDiv.id).on('click', function() {
 			var clicked = ht.getSelected();
 			if(selected[2] < clicked[0]) {
+				var string = "=SUM(" + funcStrCreator(selected) + ")"
+				funcTracker[funcTracker.length] = new cellFunction(clicked[0], clicked[1], string);
 				ht.setDataAtCell(clicked[0], clicked[1], sum, true);
 				$(this).off('click');
 			}
@@ -45,8 +47,8 @@ function sum() {
 //Handles the average operation
 function average() {
 	var selected = ht.getSelected();
-	var cells = ht.getData(selected[0], selected[1], selected[2], selected[3]);
 	if (selected != undefined) {
+	var cells = ht.getData(selected[0], selected[1], selected[2], selected[3]);
 		var sum = 0;
 		var count = 0;
 		//Adds all selected cells
@@ -66,6 +68,8 @@ function average() {
 		$("#" + tableDiv.id).on('click', function() {
 			var clicked = ht.getSelected();
 			if(selected[2] < clicked[0]) {
+				var string = "=AVG(" + funcStrCreator(selected) + ")"
+				funcTracker[funcTracker.length] = new cellFunction(clicked[0], clicked[1], string);
 				ht.setDataAtCell(clicked[0], clicked[1], sum/count, true);
 				$(this).off('click');
 			}
@@ -151,11 +155,23 @@ function changeInput(text) {
 }
 
 //Keeps track of all function cells (Cells with =SUM() or =AVG())
-function newCellFunction(rowNum, cellNum, funcString) {
-	this.rowNum = rowNum;
-	this.cellNum = cellNum;
+function cellFunction(row, col, funcString) {
+	this.row = row;
+	this.col = col;
 	this.funcString = funcString;
 }
+
+
+function funcStrCreator(selection) {
+	selection = topLeft(selection);
+	var start = Number(selection[0]+1) + String.fromCharCode(selection[1]+65);
+	var end = Number(selection[2]+1) + String.fromCharCode(selection[3]+65);
+	var final = start + ":" + end;
+	return final;
+}
+
+
+
 
 
 

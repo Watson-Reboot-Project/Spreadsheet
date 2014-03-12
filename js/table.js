@@ -4,7 +4,7 @@
 
 //global variables
 var currSelect;
-var cellFunction = new Array();
+var funcTracker = new Array();
 
 $('#' + tableDiv.id).handsontable({
   minSpareRows: 30,
@@ -32,14 +32,66 @@ $(document).ready(function() {
 	$("#" + pasteButton.id).click(function() { paste(); });
 	$("#" + clearButton.id).click(function() { clear(); });
 	$("#" + averageButton.id).click(function() { average(); });
+	$("#" + formatButton.id).click(function() { format(); });
 	
 	//Cut event listener
 	$(document).bind('cut', function() {
 		cut();
 	});
 	
-	//Listens for click
-	$(document).on('click', function(evt) {
+	//Listen for any changes to cells.
+	$("#" + tableDiv.id).handsontable({
+		afterChange: function(changes, source) {
+			var selected = ht.getSelected();
+			var isFunction = false
+			for(var i = 0; i < funcTracker.length; i++) {
+				if(funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
+					changeInput(funcTracker[i].funcString);
+					isFunction = true;
+					break;
+				}
+			}
+			if(!isFunction) changeInput(ht.getDataAtCell(selected[0], selected[1]));
+		}
+	});
+	
+	//Listens for enter key. When detected, prevent the default action (edit cell) and simply move to next row.
+	$("#" + tableDiv.id).handsontable({
+		beforeKeyDown: function(evt) {
+			if(evt.which == 13) {
+				if(!evt.shiftKey) {
+					evt.stopImmediatePropagation();
+					var selected = topLeft(ht.getSelected());
+					ht.selectCell(selected[0]+1, selected[1]);
+				}
+				else {
+					evt.stopImmediatePropagation();
+					var selected = topLeft(ht.getSelected());
+					ht.selectCell(selected[0]-1, selected[1]);
+				}
+			}
+		}
+	});
+	
+	//Listens for selection changing
+	$("#" + tableDiv.id).handsontable({
+		afterSelection: function(r, c, r2, c2) {
+			var selected = ht.getSelected();
+			var isFunction = false
+			for(var i = 0; i < funcTracker.length; i++) {
+				if(funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
+					changeInput(funcTracker[i].funcString);
+					isFunction = true;
+					break;
+				}
+			}
+			if(!isFunction) changeInput(ht.getDataAtCell(selected[0], selected[1]));
+		}
+	});
+	
+	//Listens for double click
+	$(document).on('dblclick', function(evt) {
+		console.log("DOUBLE CLICK. need to change cell to 'edit' value");
 		var selected = topLeft(ht.getSelected());
 		currSelect = selected;
 		if(selected != undefined) {
@@ -47,19 +99,6 @@ $(document).ready(function() {
 			if(data != null) changeInput(data);
 		}
 	});
-	
-	//Listens for any keypresses. Won't detect enter keypress.
-	$(document).on('keydown', function(evt) {
-		console.log("keydown");
-		var selected = topLeft(ht.getSelected());
-		if(selected != currSelect && selected != undefined) {
-			var data = ht.getDataAtCell(selected[0], selected[1]);
-			changeInput(data);
-		}
-	});
-	
-	//Detect Enter key and trigger keypress
-	$("#" + tableDiv.id).keydown(function(evt) { if(evt.which == 13) $(document).trigger('keydown'); });
 	
 });
 
