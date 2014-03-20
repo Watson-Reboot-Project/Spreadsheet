@@ -82,11 +82,16 @@ function cut() {
 	if (ht.getSelected() != undefined) {
 		var selected = topLeft(ht.getSelected());
 		tempCopy = ht.getData(selected[0], selected[1], selected[2], selected[3]);
+		var allZero = emptyArray(selected[0], selected[1], selected[2], selected[3]);
+		ht.populateFromArray(selected[0],selected[1], emptyArray, selected[2], selected[3]);
+		/**
 		for(var i = selected[0]; i <= selected[2]; i++) {
 			for(var y = selected[1]; y <= selected[3]; y++) {
 				ht.setDataAtCell(i, y, null, true);
 			}
 		}
+		*/
+		
 	}
 }
 
@@ -102,11 +107,14 @@ function copy() {
 function paste() {
 	var selected = ht.getSelected();
 	if(tempCopy != undefined && selected != undefined) {
+		ht.populateFromArray(selected[0], selected[1], tempCopy, selected[2], selected[3]);
+		/**
 		for(var i = selected[0]; i < tempCopy.length + selected[0]; i++) {
 			for(var y = selected[1]; y < tempCopy[0].length + selected[1]; y++) {
 				if(i < 30) ht.setDataAtCell(i, y, tempCopy[i-selected[0]][y-selected[1]], true);
 			}
 		}
+		*/
 	}
 }
 
@@ -170,11 +178,29 @@ function funcStrCreator(selection) {
 	return final;
 }
 
-
-
-
-
-
+/**
+	Creates an empty array for the given start and end metrics
+	of a table.
+*/
+function emptyArray(row, col, endRow, endCol)
+{
+	if((row>endRow)||(col>endCol))
+		return -1;
+	//Normalize all to start at 0.
+	endRow=endRow-row;
+	row=row-row;
+	endCol=endCol-col;
+	col=col-col;
+	var allNull;
+	for(var i=row; i<=endRow;i++)
+	{
+		for(var k=col; k<=endCol;k++)
+		{
+			allNull[i][k] = null;
+		}
+	}
+	return allNull;
+}
 
 
 
