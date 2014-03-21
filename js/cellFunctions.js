@@ -170,6 +170,10 @@ function funcStrCreator(selection) {
 	return final;
 }
 
+function format() {
+	console.log("format");
+}
+
 
 
 

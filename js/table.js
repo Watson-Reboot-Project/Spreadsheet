@@ -108,12 +108,14 @@ $(document).ready(function() {
 	
 	//Listens for double click
 	$(document).on('dblclick', function(evt) {
-		console.log("DOUBLE CLICK. need to change cell to 'edit' value");
-		var selected = topLeft(ht.getSelected());
-		currSelect = selected;
-		if(selected != undefined) {
-			var data = ht.getDataAtCell(selected[0], selected[1]);
-			if(data != null) changeInput(data);
+		if($(document.activeElement)[0].className.indexOf("handsontable") >= 0) {
+			console.log("Double click. Change cell to 'edit' value");
+			var selected = topLeft(ht.getSelected());
+			currSelect = selected;
+			if(selected != undefined) {
+				var data = ht.getDataAtCell(selected[0], selected[1]);
+				if(data != null) changeInput(data);
+			}
 		}
 	});
 	
