@@ -35,8 +35,26 @@ $(document).ready(function() {
 	$("#" + formatButton.id).click(function() { format(); });
 	
 	//Cut event listener
-	$(document).bind('cut', function() {
-		cut();
+	$(document).bind('cut', function(evt) {
+		if($(document.activeElement)[0].id.indexOf("input") == -1) {
+			evt.preventDefault();
+			cut();
+		}
+	});
+	
+	//Copy event listener
+	$(document).bind('copy', function(evt) {
+		if($(document.activeElement)[0].id.indexOf("input") == -1) {
+			evt.preventDefault();
+			copy();
+		}
+	});
+	
+	$(document).bind('paste', function(evt) {
+		if($(document.activeElement)[0].id.indexOf("input") == -1) {
+			evt.preventDefault();
+			setTimeout(function() { paste(); }, 55);
+		}
 	});
 	
 	//Listen for any changes to cells.
@@ -59,13 +77,12 @@ $(document).ready(function() {
 	$("#" + tableDiv.id).handsontable({
 		beforeKeyDown: function(evt) {
 			if(evt.which == 13) {
+				evt.stopImmediatePropagation();
 				if(!evt.shiftKey) {
-					evt.stopImmediatePropagation();
 					var selected = topLeft(ht.getSelected());
 					ht.selectCell(selected[0]+1, selected[1]);
 				}
 				else {
-					evt.stopImmediatePropagation();
 					var selected = topLeft(ht.getSelected());
 					ht.selectCell(selected[0]-1, selected[1]);
 				}
