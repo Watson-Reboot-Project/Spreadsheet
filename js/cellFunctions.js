@@ -107,6 +107,7 @@ function copy() {
 function paste() {
 	var selected = ht.getSelected();
 	if(tempCopy != undefined && selected != undefined) {
+		console.log(tempCopy);
 		ht.populateFromArray(selected[0], selected[1], tempCopy, selected[2], selected[3]);
 		/**
 		for(var i = selected[0]; i < tempCopy.length + selected[0]; i++) {
