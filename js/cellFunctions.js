@@ -83,7 +83,7 @@ function cut() {
 		var selected = topLeft(ht.getSelected());
 		tempCopy = ht.getData(selected[0], selected[1], selected[2], selected[3]);
 		var allZero = emptyArray(selected[0], selected[1], selected[2], selected[3]);
-		ht.populateFromArray(selected[0],selected[1], emptyArray, selected[2], selected[3]);
+		ht.populateFromArray(selected[0],selected[1], allZero, selected[2], selected[3]);
 		/**
 		for(var i = selected[0]; i <= selected[2]; i++) {
 			for(var y = selected[1]; y <= selected[3]; y++) {
@@ -107,8 +107,7 @@ function copy() {
 function paste() {
 	var selected = ht.getSelected();
 	if(tempCopy != undefined && selected != undefined) {
-		console.log(tempCopy);
-		ht.populateFromArray(selected[0], selected[1], tempCopy, selected[2], selected[3]);
+		ht.populateFromArray(selected[0], selected[1], tempCopy, selected[0]+tempCopy.length-1, selected[1]+tempCopy[0].length-1);
 		/**
 		for(var i = selected[0]; i < tempCopy.length + selected[0]; i++) {
 			for(var y = selected[1]; y < tempCopy[0].length + selected[1]; y++) {
@@ -192,9 +191,10 @@ function emptyArray(row, col, endRow, endCol)
 	row=row-row;
 	endCol=endCol-col;
 	col=col-col;
-	var allNull;
+	var allNull = new Array();
 	for(var i=row; i<=endRow;i++)
 	{
+		allNull[i] = new Array();
 		for(var k=col; k<=endCol;k++)
 		{
 			allNull[i][k] = null;
