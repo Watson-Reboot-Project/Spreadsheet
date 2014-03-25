@@ -2,6 +2,7 @@
  * This handles the functions for the cells
  * */
 var ht = $("#"+tableDiv.id).handsontable('getInstance');
+
 var tempCopy;
 
 //Redoes the last undone operation
