@@ -4,6 +4,7 @@
 var ht = $("#"+tableDiv.id).handsontable('getInstance');
 
 var tempCopy;
+var offset;
 
 //Redoes the last undone operation
 function undo() {
@@ -170,11 +171,28 @@ function cellFunction(row, col, funcString) {
 	this.funcString = funcString;
 }
 
+function functionSUM(details)
+{
+  var sum = 0;
+  for(var i = details.row;i<=details.endRow;i++)
+  {
+    for(var k =details.col;k<=details.endCol;k++)
+    {
+      sum+=parseInt(ht.getDataAtCell(i, k));
+    }
+  }
+  return sum;
+}
+
+function functionAVG(details)
+{
+}
+
 
 function funcStrCreator(selection) {
 	selection = topLeft(selection);
-	var start = Number(selection[0]+1) + String.fromCharCode(selection[1]+65);
-	var end = Number(selection[2]+1) + String.fromCharCode(selection[3]+65);
+	var start = String.fromCharCode(selection[1]+65) + Number(selection[0]+1);
+	var end = String.fromCharCode(selection[3]+65) + Number(selection[2]+1);
 	var final = start + ":" + end;
 	return final;
 }

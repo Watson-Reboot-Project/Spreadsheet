@@ -77,6 +77,7 @@ $(document).ready(function() {
 	$("#" + tableDiv.id).handsontable({
 		afterSelection: function(r, c, r2, c2) {
 			var selected = ht.getSelected();
+			console.log(selected[0], selected[1]);
 			var isFunction = false
 			for(var i = 0; i < funcTracker.length; i++) {
 				if(funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
@@ -87,6 +88,23 @@ $(document).ready(function() {
 			}
 			if(!isFunction) changeInput(ht.getDataAtCell(selected[0], selected[1]));
 		}
+	});
+
+	//Instructions before setting value into a cell.
+	$("#" + tableDiv.id).handsontable({
+		beforeSet: function(value)
+		{
+			var details = functionParse(value.value);
+			if(details.function==functionCall.SUM)
+			{
+				value.value = functionSUM(details);
+			}
+			else if(details.function==functionCall.AVG)
+			{
+				value = functionAVG(details);
+			}
+		}
+
 	});
 	
 	//Listens for double click
