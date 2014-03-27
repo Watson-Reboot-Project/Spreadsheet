@@ -68,7 +68,7 @@ $(document).ready(function() {
 			var selected = ht.getSelected();
 			var isFunction = false
 			for(var i = 0; i < funcTracker.length; i++) {
-				if(funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
+				if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
 					changeInput(funcTracker[i].funcString);
 					isFunction = true;
 					break;
@@ -94,7 +94,7 @@ $(document).ready(function() {
 			var selected = ht.getSelected();
 			var isFunction = false;
 			for(var i = 0; i < funcTracker.length; i++) {
-				if(funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
+				if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
 					changeInput(funcTracker[i].funcString);
 					isFunction = true;
 					break;
@@ -108,6 +108,10 @@ $(document).ready(function() {
 	$("#" + tableDiv.id).handsontable({
 		beforeSet: function(value)
 		{
+      var selected = ht.getSelected();
+      fillFuncTracker(selected);
+      var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
+      func.funcString = ib.val();
 			if(!(ib.is(":focus")))
 			{
 				var details = functionParse(value.value);
@@ -143,9 +147,10 @@ function pressEnter(event)
 {
 	ib.blur();
 	var selected = topLeft(ht.getSelected());
+	fillFuncTracker(selected);
 	var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-	console.log(funcTracker[0]);
 	func.funcString = ib.val();
+	console.log(func);
 	ht.setDataAtCell(selected[0], selected[1], func.funcString);
 	if(!event.shiftKey)
 	{
@@ -159,9 +164,14 @@ function pressEnter(event)
 	}
 }
 
-
-
-
-
-
-
+function fillFuncTracker(selected)
+{
+  if(funcTracker[selected[0]*ht.countRows()+selected[1]] === undefined)
+	{
+    funcTracker[selected[0]*ht.countRows()+selected[1]] = {};
+    var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
+    func.row=selected[0];
+    func.col=selected[1];
+    console.log("hi");
+	}
+}
