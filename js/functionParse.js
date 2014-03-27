@@ -15,6 +15,7 @@ functionCall = {
 
 function functionParse(functionString)
 {
+  console.log(functionString);
 	var details = new parseDetails();
 	//Check if first character is equal. If so, parse function
 	if(functionString.charAt(0)=='=')
@@ -59,7 +60,6 @@ function functionParse(functionString)
 	else
 	{
 	}
-	console.log(details);
 	return details;
 }
 

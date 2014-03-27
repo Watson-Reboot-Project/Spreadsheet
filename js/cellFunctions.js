@@ -174,11 +174,15 @@ function cellFunction(row, col, funcString) {
 function functionSUM(details)
 {
   var sum = 0;
+  var temp = 0;
   for(var i = details.row;i<=details.endRow;i++)
   {
     for(var k =details.col;k<=details.endCol;k++)
     {
-      sum+=parseInt(ht.getDataAtCell(i, k));
+      temp=parseInt(ht.getDataAtCell(i, k));
+      if(isNaN(temp))
+        temp=0;
+      sum+=temp;
     }
   }
   return sum;
@@ -186,6 +190,21 @@ function functionSUM(details)
 
 function functionAVG(details)
 {
+  var sum =0;
+  var temp =0;
+  var count =0;
+  for(var i = details.row;i<=details.endRow;i++)
+  {
+    for(var k =details.col;k<=details.endCol;k++)
+    {
+      temp=parseInt(ht.getDataAtCell(i, k));
+      if(isNaN(temp))
+        temp=0;
+      sum+=temp;
+      count++;
+    }
+  }
+  return sum/count;
 }
 
 

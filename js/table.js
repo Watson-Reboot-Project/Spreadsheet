@@ -1,6 +1,27 @@
 /*
  * This handles the functionality of the table
  * */
+ 
+ //Note by Mitchell Martin- I'm including the functionality of the input
+ //box in here too. Input/function boxes are an integral part of spreadsheet
+ //programs, and they are heavily intertwined.
+ var ib = $("#"+input.id);
+ ib.bind('input', function(event)
+ {
+	var selected = ht.getSelected();
+	ht.setDataAtCell(selected[0],selected[1], ib.val());
+ });
+ 
+ ib.keypress(function(event)
+ {
+	if(event.which==13)
+	{
+		var selected = ht.getSelected();
+		var temp = ib.val();
+		pressEnter(event);
+		ht.setDataAtCell(selected[0],selected[1], temp);
+	}
+ });
 
 //global variables
 var currSelect;
@@ -55,20 +76,12 @@ $(document).ready(function() {
 		}
 	});
 	
-	//Listens for enter key. When detected, prevent the default action (edit cell) and simply move to next row.
+	//Listens for enter key. When detected, prevent the default action (edit cell) and move to a new one
+	//while passing data from function tracking or input.
 	$("#" + tableDiv.id).handsontable({
-		beforeKeyDown: function(evt) {
-			if(evt.which == 13) {
-				if(!evt.shiftKey) {
-					evt.stopImmediatePropagation();
-					var selected = topLeft(ht.getSelected());
-					ht.selectCell(selected[0]+1, selected[1]);
-				}
-				else {
-					evt.stopImmediatePropagation();
-					var selected = topLeft(ht.getSelected());
-					ht.selectCell(selected[0]-1, selected[1]);
-				}
+		beforeKeyDown: function(event) {
+			if(event.which == 13) {
+				pressEnter(event)
 			}
 		}
 	});
@@ -94,14 +107,17 @@ $(document).ready(function() {
 	$("#" + tableDiv.id).handsontable({
 		beforeSet: function(value)
 		{
-			var details = functionParse(value.value);
-			if(details.function==functionCall.SUM)
+			if(!(ib.is(":focus")))
 			{
-				value.value = functionSUM(details);
-			}
-			else if(details.function==functionCall.AVG)
-			{
-				value = functionAVG(details);
+				var details = functionParse(value.value);
+				if(details.function==functionCall.SUM)
+				{
+					value.value = functionSUM(details);
+				}
+				else if(details.function==functionCall.AVG)
+				{
+					value.value = functionAVG(details);
+				}
 			}
 		}
 
@@ -120,6 +136,23 @@ $(document).ready(function() {
 	
 });
 
+//Handles functionality of whenever the enter key is pressed. This should be the
+//same regardless of whether the input field or table is focused.
+function pressEnter(event)
+{
+	ib.blur();
+	var selected = topLeft(ht.getSelected());
+	if(!event.shiftKey)
+	{
+		//evt.stopImmediatePropagation();
+		ht.selectCell(selected[0]+1, selected[1]);
+	}
+	else
+	{
+		//evt.stopImmediatePropagation();
+		ht.selectCell(selected[0]-1, selected[1]);
+	}
+}
 
 
 
