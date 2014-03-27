@@ -40,6 +40,8 @@ $('#' + tableDiv.id).handsontable({
 
 //On page load..
 $(document).ready(function() {
+  //Default selected cell to 0,0
+  ht.selectCell(0,0);
 	//set offset for buttons
 	var offset = $("#" + buttonDiv.id).offset();
 	$("#" + buttonDiv.id).offset({top: offset.top+55, left : offset.left});
@@ -90,8 +92,7 @@ $(document).ready(function() {
 	$("#" + tableDiv.id).handsontable({
 		afterSelection: function(r, c, r2, c2) {
 			var selected = ht.getSelected();
-			console.log(selected[0], selected[1]);
-			var isFunction = false
+			var isFunction = false;
 			for(var i = 0; i < funcTracker.length; i++) {
 				if(funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
 					changeInput(funcTracker[i].funcString);
@@ -142,14 +143,18 @@ function pressEnter(event)
 {
 	ib.blur();
 	var selected = topLeft(ht.getSelected());
+	var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
+	console.log(funcTracker[0]);
+	func.funcString = ib.val();
+	ht.setDataAtCell(selected[0], selected[1], func.funcString);
 	if(!event.shiftKey)
 	{
-		//evt.stopImmediatePropagation();
+		//event.stopImmediatePropagation();
 		ht.selectCell(selected[0]+1, selected[1]);
 	}
 	else
 	{
-		//evt.stopImmediatePropagation();
+		//event.stopImmediatePropagation();
 		ht.selectCell(selected[0]-1, selected[1]);
 	}
 }
