@@ -65,6 +65,7 @@ $(document).ready(function() {
 	//Listen for any changes to cells.
 	$("#" + tableDiv.id).handsontable({
 		afterChange: function(changes, source) {
+      console.log(changes[0][3]);
 			var selected = ht.getSelected();
 			var isFunction = false
 			for(var i = 0; i < funcTracker.length; i++) {
@@ -80,6 +81,7 @@ $(document).ready(function() {
 	
 	//Listens for enter key. When detected, prevent the default action (edit cell) and move to a new one
 	//while passing data from function tracking or input.
+	
 	$("#" + tableDiv.id).handsontable({
 		beforeKeyDown: function(event) {
 			if(event.which == 13) {
@@ -87,6 +89,15 @@ $(document).ready(function() {
 			}
 		}
 	});
+	
+		$("#" + tableDiv.id).handsontable({
+		onValidate: function()
+		{
+    var selected = ht.getSelected();
+    console.log(ht.getDataAtCell(selected[0], selected[1]));
+    ib.val(ht.getDataAtCell(selected[0], selected[1]));
+    }
+    });
 	
 	//Listens for selection changing
 	$("#" + tableDiv.id).handsontable({
@@ -108,12 +119,17 @@ $(document).ready(function() {
 	$("#" + tableDiv.id).handsontable({
 		beforeSet: function(value)
 		{
-      var selected = ht.getSelected();
+      console.log(value);
+      var selected = {};
+      selected[0] =value.row;
+      selected[1] = value.prop;
+      selected[2] = value.value;
       fillFuncTracker(selected);
       var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-      func.funcString = ib.val();
+      func.funcString = value.value;
 			if(!(ib.is(":focus")))
 			{
+        console.log("hi");
 				var details = functionParse(value.value);
 				if(details.function==functionCall.SUM)
 				{
@@ -146,12 +162,7 @@ $(document).ready(function() {
 function pressEnter(event)
 {
 	ib.blur();
-	var selected = topLeft(ht.getSelected());
-	fillFuncTracker(selected);
-	var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-	func.funcString = ib.val();
-	console.log(func);
-	ht.setDataAtCell(selected[0], selected[1], func.funcString);
+	var selected = ht.getSelected();
 	if(!event.shiftKey)
 	{
 		//event.stopImmediatePropagation();
@@ -172,6 +183,5 @@ function fillFuncTracker(selected)
     var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
     func.row=selected[0];
     func.col=selected[1];
-    console.log("hi");
 	}
 }

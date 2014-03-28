@@ -175,6 +175,7 @@ function functionSUM(details)
 {
   var sum = 0;
   var temp = 0;
+  console.log(details);
   for(var i = details.row;i<=details.endRow;i++)
   {
     for(var k =details.col;k<=details.endCol;k++)

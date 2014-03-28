@@ -44,7 +44,7 @@ function functionParse(functionString)
 			//Columns are stored in text form as upper-case ASCII letters. This finds
 			//and converts their values to array indices.
 			details.col=functionString.charCodeAt(indexOpen+1)-65;
-			details.endCol=functionString.charCodeAt(indexOpen+1)-65;
+			details.endCol=functionString.charCodeAt(indexColon+1)-65;
 			//Rows are represented as number strings 
 			details.row=parseInt(functionString.substring(indexOpen+2,indexColon))-1;
 			details.endRow=parseInt(functionString.substring(indexColon+2,indexClose))-1;
