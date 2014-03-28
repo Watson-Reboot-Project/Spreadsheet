@@ -38,8 +38,8 @@ function sum() {
 			var clicked = ht.getSelected();
 			if(selected[2] < clicked[0]) {
 				var string = "=SUM(" + funcStrCreator(selected) + ")"
-				funcTracker[funcTracker.length] = new cellFunction(clicked[0], clicked[1], string);
-				ht.setDataAtCell(clicked[0], clicked[1], sum, true);
+				funcTracker[clicked[0]*ht.countRows()+clicked[1]] = new cellFunction(clicked[0], clicked[1], string);
+				ht.setDataAtCell(clicked[0], clicked[1], string, true);
 				$(this).off('click');
 			}
 		});
@@ -71,8 +71,9 @@ function average() {
 			var clicked = ht.getSelected();
 			if(selected[2] < clicked[0]) {
 				var string = "=AVG(" + funcStrCreator(selected) + ")"
-				funcTracker[funcTracker.length] = new cellFunction(clicked[0], clicked[1], string);
-				ht.setDataAtCell(clicked[0], clicked[1], sum/count, true);
+				funcTracker[clicked[0]*ht.countRows()+clicked[1]] = new cellFunction(clicked[0], clicked[1], string);
+				console.log(string);
+				ht.setDataAtCell(clicked[0], clicked[1], string, true);
 				$(this).off('click');
 			}
 		});
