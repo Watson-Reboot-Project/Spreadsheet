@@ -4652,6 +4652,7 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
     this.row = row;
     this.col = col;
     this.prop = prop;
+    readOnlyProp = this.prop;
     this.originalValue = originalValue;
     this.cellProperties = cellProperties;
 
@@ -4823,7 +4824,7 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
     return this.TEXTAREA.value
   };
 
-  TextEditor.prototype.setValue = function(newValue){
+  TextEditor.prototype.setValue = function(newValue)
     this.TEXTAREA.value = newValue;
   };
 

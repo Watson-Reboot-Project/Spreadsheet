@@ -26,6 +26,7 @@
 //global variables
 var currSelect;
 var funcTracker = new Array();
+var readOnlyProp;
 
 $('#' + tableDiv.id).handsontable({
   minSpareRows: 30,
@@ -88,6 +89,13 @@ $(document).ready(function() {
 				pressEnter(event)
 			}
 		}
+	});
+
+	//handles ASCII keypresses. Specifically, I'm aiming to mirror the cell editor in
+	//the input box.
+	$("#" + tableDiv.id).keypress(function(event)
+	{
+		console.log(readOnlyProp);
 	});
 	
 		$("#" + tableDiv.id).handsontable({
