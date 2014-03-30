@@ -2888,7 +2888,6 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
     var init = function () {
 
       function onKeyDown(event) {
-
         if (!instance.isListening()) {
           return;
         }
@@ -4647,16 +4646,19 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
     throw Error('Editor close() method unimplemented');
   };
 
-  BaseEditor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
+  BaseEditor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties)
+	{
     this.TD = td;
     this.row = row;
     this.col = col;
     this.prop = prop;
-    readOnlyProp = this.prop;
     this.originalValue = originalValue;
     this.cellProperties = cellProperties;
 
     this.state = Handsontable.EditorState.VIRGIN;
+	//MITCHELLSNOTE
+	currentEditor = this;
+	//MITCHELLSNOTE
   };
 
   BaseEditor.prototype.extend = function(){
@@ -4824,7 +4826,7 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
     return this.TEXTAREA.value
   };
 
-  TextEditor.prototype.setValue = function(newValue)
+  TextEditor.prototype.setValue = function(newValue){
     this.TEXTAREA.value = newValue;
   };
 

@@ -26,7 +26,7 @@
 //global variables
 var currSelect;
 var funcTracker = new Array();
-var readOnlyProp;
+var currentEditor;
 
 $('#' + tableDiv.id).handsontable({
   minSpareRows: 30,
@@ -82,11 +82,17 @@ $(document).ready(function() {
 	
 	//Listens for enter key. When detected, prevent the default action (edit cell) and move to a new one
 	//while passing data from function tracking or input.
-	
+	//Mitchell's note- also looking for backspace and delete
 	$("#" + tableDiv.id).handsontable({
 		beforeKeyDown: function(event) {
 			if(event.which == 13) {
 				pressEnter(event)
+			}
+			if(event.which == 8)
+			{
+				//TODO: get caret position for reliable insertion/deletion
+				console.log(currentEditor.wtDom);
+				console.log(currentEditor);
 			}
 		}
 	});
@@ -95,7 +101,11 @@ $(document).ready(function() {
 	//the input box.
 	$("#" + tableDiv.id).keypress(function(event)
 	{
-		console.log(readOnlyProp);
+		//IMPORTANT NOTE BY MITCHELL-
+		//The handsontable has no implemented method to access properties of editors.
+		//To make this work, I created a reference to a previously private variable by editing the handsontable.js
+		//file itself. I made a note of where the edit occured- ctrl+f MITCHELLSNOTE
+		ib.val(currentEditor.TEXTAREA.value+String.fromCharCode(event.which));
 	});
 	
 		$("#" + tableDiv.id).handsontable({
