@@ -72,7 +72,6 @@ function average() {
 			if(selected[2] < clicked[0]) {
 				var string = "=AVG(" + funcStrCreator(selected) + ")"
 				funcTracker[clicked[0]*ht.countRows()+clicked[1]] = new cellFunction(clicked[0], clicked[1], string);
-				console.log(string);
 				ht.setDataAtCell(clicked[0], clicked[1], string, true);
 				$(this).off('click');
 			}
@@ -125,14 +124,10 @@ function paste() {
 function clear() {
 	var selected = topLeft(ht.getSelected());
 	var data = ht.getData(selected[0], selected[1], selected[2], selected[3]);
-	if(selected != undefined) {
-		for(var i = selected[0]; i <= selected[2]; i++) {
-			if(!ht.isEmptyRow(i)) {
-				for(var y = selected[1]; y <= selected[3]; y++) {
-					if(ht.getDataAtCell(i, y) != null) ht.setDataAtCell(i, y, null, true);
-				}
-			}
-		}
+	if(selected != undefined)
+	{
+    var allZero = emptyArray(selected[0], selected[1], selected[2], selected[3])
+    ht.populateFromArray(selected[0],selected[1], allZero, selected[2], selected[3]);
 	}
 }
 
@@ -162,7 +157,10 @@ function topLeft(selected) {
 
 //Changes text in intput bar
 function changeInput(text) {
-	$("#" + input.id).val(text);
+  if(!(ib.is(":focus")))
+  {
+    $("#" + input.id).val(text);
+  }
 }
 
 //Keeps track of all function cells (Cells with =SUM() or =AVG())
@@ -176,7 +174,6 @@ function functionSUM(details)
 {
   var sum = 0;
   var temp = 0;
-  console.log(details);
   for(var i = details.row;i<=details.endRow;i++)
   {
     for(var k =details.col;k<=details.endCol;k++)

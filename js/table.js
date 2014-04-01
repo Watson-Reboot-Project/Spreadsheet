@@ -6,6 +6,7 @@
  //box in here too. Input/function boxes are an integral part of spreadsheet
  //programs, and they are heavily intertwined.
  var ib = $("#"+input.id);
+ 
  ib.bind('input', function(event)
  {
 	var selected = ht.getSelected();
@@ -66,12 +67,11 @@ $(document).ready(function() {
 	//Listen for any changes to cells.
 	$("#" + tableDiv.id).handsontable({
 		afterChange: function(changes, source) {
-      console.log(changes[0][3]);
 			var selected = ht.getSelected();
 			var isFunction = false
 			for(var i = 0; i < funcTracker.length; i++) {
 				if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
-					changeInput(funcTracker[i].funcString);
+          changeInput(funcTracker[i].funcString);
 					isFunction = true;
 					break;
 				}
@@ -85,14 +85,27 @@ $(document).ready(function() {
 	//Mitchell's note- also looking for backspace and delete
 	$("#" + tableDiv.id).handsontable({
 		beforeKeyDown: function(event) {
+      //enter key
 			if(event.which == 13) {
 				pressEnter(event)
 			}
+			//backspace key
 			if(event.which == 8)
 			{
-				//TODO: get caret position for reliable insertion/deletion
-				console.log(currentEditor.wtDom);
-				console.log(currentEditor);
+				ib.val(currentEditor.TEXTAREA.value+String.fromCharCode(event.which));
+				var caretPosition=currentEditor.wtDom.getCaretPosition(currentEditor.TEXTAREA);
+				//This creates substrings of the textbox's text, up to but not including the
+        //caret (which is deleted) and everything after the caret.
+				ib.val(ib.val().substr(0,caretPosition-1)+ib.val().substr(caretPosition));
+			}
+			//delete key
+			if(event.which == 46)
+			{
+        ib.val(currentEditor.TEXTAREA.value+String.fromCharCode(event.which));
+				var caretPosition=currentEditor.wtDom.getCaretPosition(currentEditor.TEXTAREA);
+				//This creates substrings of the textbox's text, up to but not including the
+        //caret (which is deleted) and everything after the caret.
+				ib.val(ib.val().substr(0,caretPosition)+ib.val().substr(caretPosition+1));
 			}
 		}
 	});
@@ -105,14 +118,17 @@ $(document).ready(function() {
 		//The handsontable has no implemented method to access properties of editors.
 		//To make this work, I created a reference to a previously private variable by editing the handsontable.js
 		//file itself. I made a note of where the edit occured- ctrl+f MITCHELLSNOTE
-		ib.val(currentEditor.TEXTAREA.value+String.fromCharCode(event.which));
+		ib.val(currentEditor.TEXTAREA.value);
+		var caretPosition=currentEditor.wtDom.getCaretPosition(currentEditor.TEXTAREA);
+		//copies everything up to and including the caret, adds the character to input box,
+		//then continues along.
+		ib.val(ib.val().substr(0,caretPosition)+String.fromCharCode(event.which)+ib.val().substr(caretPosition));
 	});
 	
 		$("#" + tableDiv.id).handsontable({
 		onValidate: function()
 		{
     var selected = ht.getSelected();
-    console.log(ht.getDataAtCell(selected[0], selected[1]));
     ib.val(ht.getDataAtCell(selected[0], selected[1]));
     }
     });
@@ -137,7 +153,6 @@ $(document).ready(function() {
 	$("#" + tableDiv.id).handsontable({
 		beforeSet: function(value)
 		{
-      console.log(value);
       var selected = {};
       selected[0] =value.row;
       selected[1] = value.prop;
@@ -147,7 +162,6 @@ $(document).ready(function() {
       func.funcString = value.value;
 			if(!(ib.is(":focus")))
 			{
-        console.log("hi");
 				var details = functionParse(value.value);
 				if(details.function==functionCall.SUM)
 				{
@@ -164,7 +178,6 @@ $(document).ready(function() {
 	
 	//Listens for double click
 	$(document).on('dblclick', function(evt) {
-		console.log("DOUBLE CLICK. need to change cell to 'edit' value");
 		var selected = topLeft(ht.getSelected());
 		currSelect = selected;
 		if(selected != undefined) {

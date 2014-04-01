@@ -17,7 +17,7 @@ function functionParse(functionString)
 {
 	var details = new parseDetails();
 	//Check if first character is equal. If so, parse function
-	if(functionString.charAt(0)=='=')
+	if(functionString!==null && functionString.charAt(0)=='=')
 	{
 		if(functionString.indexOf("SUM")!=-1)
 		{
@@ -45,12 +45,27 @@ function functionParse(functionString)
 			//and converts their values to array indices.
 			details.col=functionString.charCodeAt(indexOpen+1)-65;
 			details.endCol=functionString.charCodeAt(indexColon+1)-65;
+			//check if columns are represented as invalid numbers within the string.
+			if(details.col<0||details.col-65>ht.countCols()||details.endCol<0||details.endCol-65>ht.countCols())
+			{
+        details.function = functionCall.NONE;
+        return details;
+        handleInvalidInput();
+			}
 			//Rows are represented as number strings 
 			details.row=parseInt(functionString.substring(indexOpen+2,indexColon))-1;
 			details.endRow=parseInt(functionString.substring(indexColon+2,indexClose))-1;
+			if(details.row<0||details.row>ht.countRows()||details.endRow<0||details.endRow>ht.countRows() || isNaN(details.row) || isNaN(details.endRow))
+			{
+        details.function = functionCall.NONE;
+        return details;
+        handleInvalidInput();
+			}
 		}
 		else
 		{
+      details.function = functionCall.NONE;
+      return details;
 			handleInvalidInput();
 		}
 	}
