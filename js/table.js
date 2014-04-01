@@ -171,6 +171,10 @@ $(document).ready(function() {
 				{
 					value.value = functionAVG(details);
 				}
+        else if(details.function==functionCall.ERROR)
+        {
+          value.value = "#ERROR";
+        }
 			}
 		}
 

@@ -11,7 +11,8 @@ function parseDetails()
 functionCall = { 
 	SUM:0,
 	AVG:1,
-	NONE:2 };
+	NONE:2,
+	ERROR:3 };
 
 function functionParse(functionString)
 {
@@ -31,7 +32,7 @@ function functionParse(functionString)
 		{
 			//unknown command. Throw error and return no function found.
 			handleInvalidInput();
-			details.function = functionCall.NONE;
+			details.function = functionCall.ERROR;
 			return details;
 		}
 		//TODO: substring based on comma, parse rows.
@@ -48,7 +49,7 @@ function functionParse(functionString)
 			//check if columns are represented as invalid numbers within the string.
 			if(details.col<0||details.col-65>ht.countCols()||details.endCol<0||details.endCol-65>ht.countCols())
 			{
-        details.function = functionCall.NONE;
+        details.function = functionCall.ERROR;
         return details;
         handleInvalidInput();
 			}
@@ -57,14 +58,14 @@ function functionParse(functionString)
 			details.endRow=parseInt(functionString.substring(indexColon+2,indexClose))-1;
 			if(details.row<0||details.row>ht.countRows()||details.endRow<0||details.endRow>ht.countRows() || isNaN(details.row) || isNaN(details.endRow))
 			{
-        details.function = functionCall.NONE;
+        details.function = functionCall.ERROR;
         return details;
         handleInvalidInput();
 			}
 		}
 		else
 		{
-      details.function = functionCall.NONE;
+      details.function = functionCall.ERROR;
       return details;
 			handleInvalidInput();
 		}
