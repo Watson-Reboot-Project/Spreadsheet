@@ -170,6 +170,95 @@ function cellFunction(row, col, funcString) {
 	this.funcString = funcString;
 }
 
+//takes coordinates for a selection and a specified cell, and marks all
+//cells within the range specified in details as used by cell
+function updateDependencyArrays(row, col, endRow, endCol, cellRow, cellCol)
+{
+  var error = false;
+  for (var i=row; i<=endRow; i++)
+  {
+    if(usedBy[i]===undefined)
+      usedBy[i] = [];
+    if(dependantOn[cellRow]===undefined)
+      dependantOn[cellRow] = [];
+    for(var k=col; k<=endCol; k++)
+    {
+      if(usedBy[i][k]===undefined)
+        usedBy[i][k] = [];
+      if(dependantOn[cellRow][cellCol]===undefined)
+        dependantOn[cellRow][cellCol] = [];
+      if(usedBy[i][k][cellRow]===undefined)
+        usedBy[i][k][cellRow] = [];
+      if(dependantOn[cellRow][cellCol][i]===undefined)
+        dependantOn[cellRow][cellCol][i] = [];
+      usedBy[i][k][cellRow][cellCol] = true;
+      dependantOn[cellRow][cellCol][i][k] = true;
+      //check for circular dependency. dependantOn[cellRow][cellCol][i][k]
+      //is known to be true. If dependantOn[i][k][cellCol][cellRow] is also true,
+      //then a circular dependancy has been found.
+      if(dependantOn[i]!==undefined && dependantOn[i][k]!==undefined && 
+      dependantOn[i][k][cellCol]!==undefined &&
+      dependantOn[i][k][cellCol][cellRow]!==undefined && dependantOn[i][k][cellCol][cellRow])
+      {
+        error = true;
+      }
+    }
+  }
+}
+
+//Convenience function that allows for a much smaller signature of updateDependencyArrays()
+function updateDependencyByDetails(details, cell)
+{
+  updateDependencyArrays(details.row, details.col, details.endRow, details.endCol, cell.row, cell.col);
+}
+
+//sets the value of all dependant cells
+function notifyDependants(row, col)
+{
+  console.log(row);
+  console.log(col);
+  console.log(usedBy);
+  //Cycle through cells and search for dependant cells.
+  if(usedBy[row]!== undefined && usedBy[row][col]!==undefined)
+  {
+    for(var i=0; i<usedBy[row][col].length; i++)
+    {
+      if(usedBy[row][col][i]!==undefined)
+      {
+        for(var k=0; k<usedBy[row][col][i].length; k++)
+        {
+          //when a dependant cell is found, update it.
+          if(usedBy[row][col][i][k])
+          {
+            console.log(funcTracker[i*ht.countRows()+k]);
+            ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+          }
+        }
+      }
+    }
+  }
+}
+
+//Called whenever the function string of a cell is reevaluated.
+//Removes references to cells that the specified cell is dependant on.
+//Does not clear references by cells that are dependant on the specified cell.
+function clearAssociations(row, col)
+{
+  //check to see if cell is dependant on anything
+  if(dependantOn[row]!== undefined && dependantOn[row][col]!==undefined)
+  {
+    //cycle through and remove dependancies
+    for(var i= 0; i<dependantOn[row][col].length; i++)
+    {
+      for(var k=0; k<dependantOn[row][col][i].length; k++)
+      {
+        dependantOn[row][col][i][k] = false;
+        usedBy[i][k][row][col] = false;
+      }
+    }
+  }
+}
+
 function functionSUM(details)
 {
   var sum = 0;

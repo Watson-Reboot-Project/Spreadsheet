@@ -1,2 +1,0 @@
-Row number is row - 1. Goes into selected[0]
-Column letter- "A".charCodeAt(0) gives ASCII value. Subtract 65 from this number.

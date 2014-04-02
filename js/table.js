@@ -7,6 +7,16 @@
  //programs, and they are heavily intertwined.
  var ib = $("#"+input.id);
  
+ //Creates a 4-dimensional table which stores data for which other cells use a certain cell.
+ //The way this is used is that the first two dimensions locate the cell which is depended on.
+ //The second two dimensions are for the dependant cells.
+ var usedBy = [];
+//Creates a 4-dimensional table which stores data for which cells are used by the specified cell.
+//The first two dimensions locate the dependant cell. The last two represent cells which are
+//dependencies.
+var dependantOn =[];
+//Note: for all dependencies, undefined is equivalent to false.
+ 
  ib.bind('input', function(event)
  {
 	var selected = ht.getSelected();
@@ -76,7 +86,11 @@ $(document).ready(function() {
 					break;
 				}
 			}
-			if(!isFunction) changeInput(ht.getDataAtCell(selected[0], selected[1]));
+			//After a cell is changed, it needs to notify any cell that depends on it.
+			console.log(changes);
+			notifyDependants(changes[0][0], changes[0][1]);
+			if(!isFunction)
+			 changeInput(ht.getDataAtCell(selected[0], selected[1]));
 		}
 	});
 	
@@ -137,6 +151,10 @@ $(document).ready(function() {
 	$("#" + tableDiv.id).handsontable({
 		afterSelection: function(r, c, r2, c2) {
 			var selected = ht.getSelected();
+      /*if(usedBy[selected[0]]!==undefined && usedBy[selected[0]][selected[1]]!==undefined)
+        console.log(usedBy[selected[0]][selected[1]]);
+      if(dependantOn[selected[0]]!==undefined && dependantOn[selected[0]][selected[1]]!==undefined)
+        console.log(dependantOn[selected[0]][selected[1]]);*/
 			var isFunction = false;
 			for(var i = 0; i < funcTracker.length; i++) {
 				if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
@@ -160,16 +178,35 @@ $(document).ready(function() {
       fillFuncTracker(selected);
       var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
       func.funcString = value.value;
+      //Using the cell editor does not set a cell's value until
+      //the selected cell changes. While using the text box, I use the setData
+      //method to change the display value of a cell. So this test prevents any
+      //sort of function string handling while cells are being edited.
 			if(!(ib.is(":focus")))
 			{
+        //Since the function string has changed, begin by discarding all cells this cell
+        //previously depended on.
+        clearAssociations(selected[0],selected[1]);
 				var details = functionParse(value.value);
 				if(details.function==functionCall.SUM)
 				{
+          var cell = {};
+          cell.row = value.row;
+          cell.col = value.prop;
 					value.value = functionSUM(details);
+					var error = updateDependencyByDetails(details, cell);
+					if(error)
+            value.value = "#ERROR";
 				}
 				else if(details.function==functionCall.AVG)
 				{
+          var cell = {};
+          cell.row = value.row;
+          cell.col = value.prop;
 					value.value = functionAVG(details);
+					var error = updateDependencyByDetails(details, cell);
+					if(error)
+            value.value = "#ERROR";
 				}
         else if(details.function==functionCall.ERROR)
         {
