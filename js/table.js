@@ -2,6 +2,7 @@
  * This handles the functionality of the table
  * */
  
+ 
  //Note by Mitchell Martin- I'm including the functionality of the input
  //box in here too. Input/function boxes are an integral part of spreadsheet
  //programs, and they are heavily intertwined.
@@ -87,7 +88,6 @@ $(document).ready(function() {
 				}
 			}
 			//After a cell is changed, it needs to notify any cell that depends on it.
-			console.log(changes);
 			notifyDependants(changes[0][0], changes[0][1]);
 			if(!isFunction)
 			 changeInput(ht.getDataAtCell(selected[0], selected[1]));
@@ -207,6 +207,13 @@ $(document).ready(function() {
 					var error = updateDependencyByDetails(details, cell);
 					if(error)
             value.value = "#ERROR";
+				}
+				else if(details.function==functionCall.EXPRESSION)
+				{
+          var cell = {};
+          cell.row = value.row;
+          cell.col = value.prop;
+          value.value = evaluateTableExpression(details.row, cell);
 				}
         else if(details.function==functionCall.ERROR)
         {

@@ -204,6 +204,7 @@ function updateDependencyArrays(row, col, endRow, endCol, cellRow, cellCol)
       }
     }
   }
+  return error;
 }
 
 //Convenience function that allows for a much smaller signature of updateDependencyArrays()
@@ -215,9 +216,6 @@ function updateDependencyByDetails(details, cell)
 //sets the value of all dependant cells
 function notifyDependants(row, col)
 {
-  console.log(row);
-  console.log(col);
-  console.log(usedBy);
   //Cycle through cells and search for dependant cells.
   if(usedBy[row]!== undefined && usedBy[row][col]!==undefined)
   {
@@ -230,7 +228,6 @@ function notifyDependants(row, col)
           //when a dependant cell is found, update it.
           if(usedBy[row][col][i][k])
           {
-            console.log(funcTracker[i*ht.countRows()+k]);
             ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
           }
         }
@@ -252,8 +249,11 @@ function clearAssociations(row, col)
     {
       for(var k=0; k<dependantOn[row][col][i].length; k++)
       {
-        dependantOn[row][col][i][k] = false;
-        usedBy[i][k][row][col] = false;
+        if(dependantOn[row][col][i][k]==true)
+        {
+          dependantOn[row][col][i][k] = false;
+          usedBy[i][k][row][col] = false;
+        }
       }
     }
   }
@@ -295,6 +295,87 @@ function functionAVG(details)
   return sum/count;
 }
 
+function evaluateTableExpression(expression, selectedCell)
+{
+      //replace all cell names with the values of those cells.
+      //And replace SUM and AVG operations with their values.
+      
+      var selected = [];
+      selected[0] = selectedCell.row;
+      selected[1] = selectedCell.col;
+      var SUMAVG = expression.match(SUMAVGRE);
+      console.log("hi");
+      console.log(expression.match(SUMAVGRE));
+      //cycle through occurences of SUM or AVG functions
+      while(SUMAVG!==null)
+      {
+        var expressionStart;
+        var expressionEnd;
+        var insert;
+        //remember portion of expression before cell name.
+        expressionStart = expression.substr(0,SUMAVG.index);
+        //remember portion after.
+        expressionEnd = expression.substr(SUMAVG.index+SUMAVG[0].length);
+        //Get beginning of cell range from SUM or AVG function
+        cellNames = SUMAVG[0].match(cellRE);
+        var cellRow = getRowFromNumber(cellNames[0].substr(1));
+        var cellCol = getColFromChar(cellNames[0].charAt(0));
+        //Get end of cell range
+        cellNames = SUMAVG[0].substr(SUMAVG[0].indexOf(":")).match(cellRE);
+        var cellRow2 = getRowFromNumber(cellNames[0].substr(1));
+        var cellCol2 = getColFromChar(cellNames[0].charAt(0));
+        var details = {};
+        details.row = cellRow;
+        details.col = cellCol;
+        details.endRow = cellRow2;
+        details.endCol = cellCol2;
+        if(SUMAVG[0].indexOf("SUM")==0)
+          insert = functionSUM(details);
+        else
+          insert = functionAVG(details);
+        expression = expressionStart+insert+expressionEnd;
+        //error returned as true
+        if(updateDependencyByDetails(details, selectedCell))
+        {
+          return "#ERROR"
+        }
+        SUMAVG = expression.match(SUMAVGRE);
+      }
+      var cellNames = expression.match(cellRE);
+      //cycle through occurences of cell names.
+      while(cellNames!==null)
+      {
+          var expressionStart;
+          var expressionEnd;
+          var insert;
+          var cellRow = getRowFromNumber(cellNames[0].substr(1));
+          var cellCol = getColFromChar(cellNames[0].charAt(0));
+          //remember portion of expression before cell name.
+          expressionStart = expression.substr(0,cellNames.index);
+          //remember portion after.
+          expressionEnd = expression.substr(cellNames.index+cellNames[0].length);
+          console.log(cellNames);
+          //get value of cell
+          insert=ht.getDataAtCell(cellRow, cellCol);
+          if(insert===null)
+            insert=0;
+          //reform the expression string
+          expression = expressionStart+insert+expressionEnd;
+          //update dependency table
+          fillUsedBy(cellRow, cellCol, selected[0], selected[1], true);
+          fillDependantOn(selected[0],selected[1],cellRow,cellCol, true);
+          if(dependantOn[cellRow]!==undefined && dependantOn[cellRow][cellCol]!==undefined && 
+          dependantOn[cellRow][cellCol][selected[0]]!==undefined &&
+          dependantOn[cellRow][cellCol][selected[0]][selected[1]]!==undefined &&
+          dependantOn[cellRow][cellCol][selected[0]][selected[1]])
+          {
+            return "#ERROR";
+          }
+          cellNames = expression.match(cellRE);
+      }
+      return eval(expression);
+}
+
 
 function funcStrCreator(selection) {
 	selection = topLeft(selection);
@@ -329,7 +410,29 @@ function emptyArray(row, col, endRow, endCol)
 	return allNull;
 }
 
+//Fills an element of the table usedBy, ensuring that
+//each dimension of the table is defined
+function fillUsedBy(row1, col1, row2, col2, value)
+{
+  if(usedBy[row1]===undefined)
+    usedBy[row1] =[];
+  if(usedBy[row1][col1]===undefined)
+    usedBy[row1][col1] =[];
+  if(usedBy[row1][col1][row2]===undefined)
+    usedBy[row1][col1][row2] =[];
+  usedBy[row1][col1][row2][col2] = value;
+}
 
+function fillDependantOn(row1, col1, row2, col2, value)
+{
+  if(dependantOn[row1]===undefined)
+    dependantOn[row1] =[];
+  if(dependantOn[row1][col1]===undefined)
+    dependantOn[row1][col1] =[];
+  if(dependantOn[row1][col1][row2]===undefined)
+    dependantOn[row1][col1][row2] =[];
+  dependantOn[row1][col1][row2][col2] = value;
+}
 
 
 
