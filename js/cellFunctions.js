@@ -38,8 +38,7 @@ function sum() {
 			var clicked = ht.getSelected();
 			if(selected[2] < clicked[0]) {
 				var string = "=SUM(" + funcStrCreator(selected) + ")"
-				funcTracker[clicked[0]*ht.countRows()+clicked[1]] = new cellFunction(clicked[0], clicked[1], string);
-				ht.setDataAtCell(clicked[0], clicked[1], string, true);
+				ht.setDataAtCell(clicked[0], clicked[1], string);
 				$(this).off('click');
 			}
 		});
@@ -70,9 +69,8 @@ function average() {
 		$("#" + tableDiv.id).on('click', function() {
 			var clicked = ht.getSelected();
 			if(selected[2] < clicked[0]) {
-				var string = "=AVG(" + funcStrCreator(selected) + ")"
-				funcTracker[clicked[0]*ht.countRows()+clicked[1]] = new cellFunction(clicked[0], clicked[1], string);
-				ht.setDataAtCell(clicked[0], clicked[1], string, true);
+				var string = "=AVG(" + funcStrCreator(selected) + ")";
+				ht.setDataAtCell(clicked[0], clicked[1], string);
 				$(this).off('click');
 			}
 		});
@@ -247,12 +245,15 @@ function clearAssociations(row, col)
     //cycle through and remove dependancies
     for(var i= 0; i<dependantOn[row][col].length; i++)
     {
-      for(var k=0; k<dependantOn[row][col][i].length; k++)
+      if(dependantOn[row][col][i]!==undefined)
       {
-        if(dependantOn[row][col][i][k]==true)
+        for(var k=0; k<dependantOn[row][col][i].length; k++)
         {
-          dependantOn[row][col][i][k] = false;
-          usedBy[i][k][row][col] = false;
+          if(dependantOn[row][col][i][k]==true)
+          {
+            dependantOn[row][col][i][k] = false;
+            usedBy[i][k][row][col] = false;
+          }
         }
       }
     }
@@ -304,8 +305,6 @@ function evaluateTableExpression(expression, selectedCell)
       selected[0] = selectedCell.row;
       selected[1] = selectedCell.col;
       var SUMAVG = expression.match(SUMAVGRE);
-      console.log("hi");
-      console.log(expression.match(SUMAVGRE));
       //cycle through occurences of SUM or AVG functions
       while(SUMAVG!==null)
       {

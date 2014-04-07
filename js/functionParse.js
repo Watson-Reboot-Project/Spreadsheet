@@ -12,16 +12,16 @@ function parseDetails()
 
 //regular expression to determine if a string is a mathematical expression
 //Does not handle parenthesis enclosation.
-var expressionRE = /^[\d\+\-\/\*A-Z]+$/;
-// /^(\d+|[A-Z][\d]+|(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\))$/
+var expressionRE = /^(\d+|[A-Z][\d]+|(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\))([+\-*\/]((\d+|[A-Z][\d]+|(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\))))*$/;
+// 
 //regular expression to determine if a string is a cell name.
 var cellRE = /[A-Z][\d]+/;
 var SUMAVGRE = /(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\)/;
 var innerParenthesis = /\([^\(\)]+\)/;
 
 functionCall = { 
-	SUM:0,
-	AVG:1,
+	SUM:0, //deprecated, all functions are handled implicitly through expressions
+	AVG:1, //deprecated
 	EXPRESSION:2,
 	NONE:3,
 	ERROR:4       };
@@ -32,19 +32,24 @@ function functionParse(functionString)
 	//Check if first character is equal. If so, parse function
 	if(functionString!==null && functionString.charAt(0)=='=')
 	{
-		if(functionString.indexOf("SUM")==1)
+		//if(functionString.indexOf("SUM")==1) //deprecated
+		if(false)
 		{
 			details.function = functionCall.SUM;
 		}
-		else if(functionString.indexOf("AVG")==1)
+		//else if(functionString.indexOf("AVG")==1) //deprecated
+		else if(false)
 		{
 			details.function = functionCall.AVG;
 		}
 		else
 		{
-			//Not a cell function. Attempt to evaluate expression
-			var substitute = substituteParenthesis(functionString.substr(1));
-			console.log(substitute);
+      //remove whitespace
+      var substitute = functionString.substr(1);
+      substitute = substitute.replace(/ /g,'');
+      console.log(substitute);
+			//always attempt to evaluate as expressions in the most up-to-date builds.
+			substitute = substituteParenthesis(substitute);
 			if(expressionRE.test(substitute))
 			{
         details.function = functionCall.EXPRESSION;
@@ -55,11 +60,12 @@ function functionParse(functionString)
 			}
 		}
 		//Now search for range. I consider the string after the parenthesis.
-    var indexOpen = functionString.indexOf("(");
-    var indexColon = functionString.indexOf(":");
-    var indexClose = functionString.indexOf(")");
+    //var indexOpen = functionString.indexOf("(");
+    //var indexColon = functionString.indexOf(":");
+    //var indexClose = functionString.indexOf(")");
 		//parses for cell operations AVG and SUM
-		if((details.function==functionCall.AVG||details.function==functionCall.SUM) && indexOpen>=0 && indexColon>=0 && indexClose>=0)
+		//if((details.function==functionCall.AVG||details.function==functionCall.SUM) && indexOpen>=0 && indexColon>=0 && indexClose>=0) deprecated
+		if(false)
 		{
 			//Columns are stored in text form as upper-case ASCII letters. This finds
 			//and converts their values to array indices.
@@ -87,7 +93,7 @@ function functionParse(functionString)
 		{
       //Include everything after '='
       expressionString = functionString.substr(1);
-      details.row = expressionString;
+      details.row = expressionString.replace(/ /g,'');
       
 		}
 		else
@@ -100,8 +106,7 @@ function functionParse(functionString)
 	//If the first character is not an equals sign, ignore.
 	else
 	{
-	}
-	console.log(details);
+	};
 	return details;
 }
 
@@ -127,7 +132,8 @@ function substituteParenthesis(input)
   //assume all sum and average functions are valid expressions
   while(substring!=null)
   {
-    var inputStart = input[0].substr(0,substring.index);
+
+    var inputStart = input.substr(0,substring.index);
     //remember portion after.
     var inputEnd = input.substr(substring.index+substring[0].length);
     var insert = 1;
@@ -137,9 +143,8 @@ function substituteParenthesis(input)
   substring = input.match(innerParenthesis);
   while(substring!==null)
   {
-    console.log(substring);
     //remember portion of expression before cell name.
-    var inputStart = input[0].substr(0,substring.index);
+    var inputStart = input.substr(0,substring.index);
     //remember portion after.
     var inputEnd = input.substr(substring.index+substring[0].length);
     var insert = "#ERROR";

@@ -17,6 +17,17 @@
 //dependencies.
 var dependantOn =[];
 //Note: for all dependencies, undefined is equivalent to false.
+//stores data for format
+var formatArray =[];
+//enumerator for the six types of string formatting
+formatOption = {
+  ZERO:0,
+  ONE:1,
+  TWO:2,
+  THREE:3,
+  DOLLARS:4,
+  FNONE:5
+};
  
  ib.bind('input', function(event)
  {
@@ -188,7 +199,7 @@ $(document).ready(function() {
         //previously depended on.
         clearAssociations(selected[0],selected[1]);
 				var details = functionParse(value.value);
-				if(details.function==functionCall.SUM)
+				if(details.function==functionCall.SUM) //deprecated
 				{
           var cell = {};
           cell.row = value.row;
@@ -198,7 +209,7 @@ $(document).ready(function() {
 					if(error)
             value.value = "#ERROR";
 				}
-				else if(details.function==functionCall.AVG)
+				else if(details.function==functionCall.AVG) //deprecated
 				{
           var cell = {};
           cell.row = value.row;
@@ -218,6 +229,39 @@ $(document).ready(function() {
         else if(details.function==functionCall.ERROR)
         {
           value.value = "#ERROR";
+        }
+        //check for format specified
+        if(formatArray[selected[0]]!==undefined &&
+        formatArray[selected[0]][selected[1]]!==undefined &&
+        formatArray[selected[0]][selected[1]]!=formatOption.FNONE &&
+        !isNaN(parseFloat(value.value)))
+        {
+          var index = value.value.indexOF(".");
+          if(index==0)
+          {
+            index = value.value.length;
+            value.value =value.value+".000";
+          }
+          else
+            value.value =value.value+"00";
+          switch(formatArray[selected[0]][selected[1]])
+          {
+            case formatOption.ZERO:
+              value.value = value.value.substr(0,index);
+              break;
+            case formatOption.ONE:
+              value.value = value.value.substr(0,index+1);
+              break;
+            case formatOption.TWO:
+              value.value = value.value.substr(0,index+2);
+              break;
+            case formatOption.THREE:
+              value.value = value.value.substr(0,index+3);
+              break;
+            case formatOption.DOLLARS:
+              value.value = "$"+value.value.substr(0,index+2);
+              break;
+          }
         }
 			}
 		}
