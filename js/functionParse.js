@@ -12,7 +12,7 @@ function parseDetails()
 
 //regular expression to determine if a string is a mathematical expression
 //Does not handle parenthesis enclosation.
-var expressionRE = /^(\d+|[A-Z][\d]+|(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\))([+\-*\/]((\d+|[A-Z][\d]+|(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\))))*$/;
+var expressionRE = /^(\d+|\d+\.\d*|\.\d*|[A-Z][\d]+|(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\))([+\-*\/]((\.\d*|\d+|\d+\.\d*|[A-Z][\d]+|(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\))))*$/;
 // 
 //regular expression to determine if a string is a cell name.
 var cellRE = /[A-Z][\d]+/;
@@ -47,7 +47,6 @@ function functionParse(functionString)
       //remove whitespace
       var substitute = functionString.substr(1);
       substitute = substitute.replace(/ /g,'');
-      console.log(substitute);
 			//always attempt to evaluate as expressions in the most up-to-date builds.
 			substitute = substituteParenthesis(substitute);
 			if(expressionRE.test(substitute))

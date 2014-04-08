@@ -1,3 +1,5 @@
+//TODO: updating cells after format change
+
 /*
  * This handles the functions for the cells
  * */
@@ -75,6 +77,62 @@ function average() {
 			}
 		});
 	}
+}
+
+function format()
+{
+  var selected = ht.getSelected();
+	if (selected != undefined)
+	{
+      if(selected[0]<selected[2])
+      {
+          var row = selected[0];
+          var endRow = selected[2];
+      }    
+      else
+      {
+          var endRow = selected[0];
+          var row = selected[2];
+      }
+      if(selected[1]<selected[3])
+      {
+          var col = selected[1];
+          var endCol = selected[3];
+      }    
+      else
+      {
+          var endCol = selected[1];
+          var col = selected[3];
+      }
+	}
+	var options = ["No Format", "1", "1.0", "1.00", "1.000", "$1.00"];
+	var choice;
+	new Selector().open("Format Number", options, function(selection)
+	{
+    if(selection.indexOf("$1.00")>=0)
+      choice = formatOption.DOLLARS;
+    else if(selection.indexOf("1.000")>=0)
+      choice = formatOption.THREE;
+    else if(selection.indexOf("1.00")>=0)
+      choice = formatOption.TWO;
+    else if(selection.indexOf("1.0")>=0)
+      choice = formatOption.ONE;
+    else if(selection.indexOf("1")>=0)
+      choice = formatOption.ZERO;
+    else if(selection.indexOf("No Format")>=0)
+      choice = formatOption.FNONE;
+    for(var i = row; i <= endRow; i++)
+    {
+      if(formatArray[i]===undefined)
+        formatArray[i] = [];
+			for(var k = col; k <= endCol; k++)
+			{
+        formatArray[i][k] = choice;
+        if(funcTracker[i*ht.countRows()+k]!==undefined)
+            ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k]);
+	    }
+		}
+	});
 }
 
 //Handles the cut operation
@@ -264,6 +322,18 @@ function functionSUM(details)
 {
   var sum = 0;
   var temp = 0;
+  if (details.row>details.endRow)
+  {
+    var temp = details.row;
+    details.row = details.endRow;
+    details.endRow=temp;
+  }
+  if (details.col>details.endCol)
+  {
+    var temp = details.col;
+    details.col = details.endCol;
+    details.endCol=temp;
+  }
   for(var i = details.row;i<=details.endRow;i++)
   {
     for(var k =details.col;k<=details.endCol;k++)
@@ -282,6 +352,18 @@ function functionAVG(details)
   var sum =0;
   var temp =0;
   var count =0;
+  if (details.row>details.endRow)
+  {
+    var temp = details.row;
+    details.row = details.endRow;
+    details.endRow=temp;
+  }
+  if (details.col>details.endCol)
+  {
+    var temp = details.col;
+    details.col = details.endCol;
+    details.endCol=temp;
+  }
   for(var i = details.row;i<=details.endRow;i++)
   {
     for(var k =details.col;k<=details.endCol;k++)
@@ -353,9 +435,9 @@ function evaluateTableExpression(expression, selectedCell)
           expressionStart = expression.substr(0,cellNames.index);
           //remember portion after.
           expressionEnd = expression.substr(cellNames.index+cellNames[0].length);
-          console.log(cellNames);
           //get value of cell
           insert=ht.getDataAtCell(cellRow, cellCol);
+          insert=convertCellTextToNumber(insert);
           if(insert===null)
             insert=0;
           //reform the expression string
@@ -372,7 +454,12 @@ function evaluateTableExpression(expression, selectedCell)
           }
           cellNames = expression.match(cellRE);
       }
-      return eval(expression);
+      if(expression.indexOf("#ERROR")>=0)
+      {
+        return "#ERROR";
+      }
+      else
+        return eval(expression).toString();
 }
 
 
@@ -433,5 +520,20 @@ function fillDependantOn(row1, col1, row2, col2, value)
   dependantOn[row1][col1][row2][col2] = value;
 }
 
+function convertCellTextToNumber(string)
+{
+  if(string!==undefined && string!== null)
+  {
+    //handle monetary values
+    string = string.replace("$","");
+    //checks if result is number
+    string = parseFloat(string);
+    if(isNaN(string))
+    {
+      string="#ERROR";
+    }
+  }
+  return string;
+}
 
 

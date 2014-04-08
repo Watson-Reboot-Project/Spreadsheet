@@ -236,30 +236,34 @@ $(document).ready(function() {
         formatArray[selected[0]][selected[1]]!=formatOption.FNONE &&
         !isNaN(parseFloat(value.value)))
         {
-          var index = value.value.indexOF(".");
-          if(index==0)
+          console.log(value);
+          var index = value.value.indexOf('.');
+          if(index>=0)
+          {
+            value.value =value.value+"000";
+          }
+          else
           {
             index = value.value.length;
             value.value =value.value+".000";
           }
-          else
-            value.value =value.value+"00";
+          //TODO: correct substring lengths
           switch(formatArray[selected[0]][selected[1]])
           {
             case formatOption.ZERO:
-              value.value = value.value.substr(0,index);
-              break;
-            case formatOption.ONE:
               value.value = value.value.substr(0,index+1);
               break;
-            case formatOption.TWO:
+            case formatOption.ONE:
               value.value = value.value.substr(0,index+2);
               break;
-            case formatOption.THREE:
+            case formatOption.TWO:
               value.value = value.value.substr(0,index+3);
               break;
+            case formatOption.THREE:
+              value.value = value.value.substr(0,index+4);
+              break;
             case formatOption.DOLLARS:
-              value.value = "$"+value.value.substr(0,index+2);
+              value.value = "$"+value.value.substr(0, index+3);
               break;
           }
         }
