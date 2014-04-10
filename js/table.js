@@ -236,7 +236,6 @@ $(document).ready(function() {
         formatArray[selected[0]][selected[1]]!=formatOption.FNONE &&
         !isNaN(parseFloat(value.value)))
         {
-          console.log(value);
           var index = value.value.indexOf('.');
           if(index>=0)
           {
@@ -247,11 +246,10 @@ $(document).ready(function() {
             index = value.value.length;
             value.value =value.value+".000";
           }
-          //TODO: correct substring lengths
           switch(formatArray[selected[0]][selected[1]])
           {
             case formatOption.ZERO:
-              value.value = value.value.substr(0,index+1);
+              value.value = value.value.substr(0,index);
               break;
             case formatOption.ONE:
               value.value = value.value.substr(0,index+2);

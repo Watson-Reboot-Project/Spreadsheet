@@ -1,5 +1,3 @@
-//TODO: bette regular expressions.
-
 function parseDetails()
 {
 	this.function = functionCall.NONE;
@@ -44,9 +42,11 @@ function functionParse(functionString)
 		}
 		else
 		{
-      //remove whitespace
+      //strip whitespaces and dollar signs
       var substitute = functionString.substr(1);
       substitute = substitute.replace(/ /g,'');
+      substitute = substitute.replace(/\$/g,'');
+      console.log(substitute);
 			//always attempt to evaluate as expressions in the most up-to-date builds.
 			substitute = substituteParenthesis(substitute);
 			if(expressionRE.test(substitute))

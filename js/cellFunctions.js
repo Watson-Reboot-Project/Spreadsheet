@@ -1,5 +1,3 @@
-//TODO: updating cells after format change
-
 /*
  * This handles the functions for the cells
  * */
@@ -35,14 +33,14 @@ function sum() {
 		//Deselect selection
 		ht.deselectCell();
 		
-		//Inserts sum in cell if it's below the original selection
+		//Inserts sum in cell (if it's below the original selection)
+                //note by Mitchell: robust checking has made the previous condition
+                //obsolete.
 		$("#" + tableDiv.id).on('click', function() {
 			var clicked = ht.getSelected();
-			if(selected[2] < clicked[0]) {
 				var string = "=SUM(" + funcStrCreator(selected) + ")"
 				ht.setDataAtCell(clicked[0], clicked[1], string);
 				$(this).off('click');
-			}
 		});
 	}
 }
@@ -70,11 +68,9 @@ function average() {
 		//Inserts average in cell if it's below the original selection
 		$("#" + tableDiv.id).on('click', function() {
 			var clicked = ht.getSelected();
-			if(selected[2] < clicked[0]) {
 				var string = "=AVG(" + funcStrCreator(selected) + ")";
 				ht.setDataAtCell(clicked[0], clicked[1], string);
 				$(this).off('click');
-			}
 		});
 	}
 }
@@ -109,7 +105,9 @@ function format()
 	var choice;
 	new Selector().open("Format Number", options, function(selection)
 	{
-    if(selection.indexOf("$1.00")>=0)
+    if(selection!==null)
+    {
+      if (selection.indexOf("$1.00")>=0)
       choice = formatOption.DOLLARS;
     else if(selection.indexOf("1.000")>=0)
       choice = formatOption.THREE;
@@ -129,9 +127,15 @@ function format()
 			{
         formatArray[i][k] = choice;
         if(funcTracker[i*ht.countRows()+k]!==undefined)
-            ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k]);
+        {
+            console.log(i);
+            console.log(k);
+            console.log(funcTracker[i*ht.countRows()+k]);
+            ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+        }
 	    }
 		}
+            }
 	});
 }
 
@@ -266,7 +270,7 @@ function updateDependencyArrays(row, col, endRow, endCol, cellRow, cellCol)
 //Convenience function that allows for a much smaller signature of updateDependencyArrays()
 function updateDependencyByDetails(details, cell)
 {
-  updateDependencyArrays(details.row, details.col, details.endRow, details.endCol, cell.row, cell.col);
+  return updateDependencyArrays(details.row, details.col, details.endRow, details.endCol, cell.row, cell.col);
 }
 
 //sets the value of all dependant cells
@@ -284,7 +288,9 @@ function notifyDependants(row, col)
           //when a dependant cell is found, update it.
           if(usedBy[row][col][i][k])
           {
-            ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+            if(usedBy[i]===undefined || usedBy[i][k]===undefined ||
+            usedBy[i][k][row]===undefined || !usedBy[i][k][row][col])
+              ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
           }
         }
       }
@@ -338,11 +344,17 @@ function functionSUM(details)
   {
     for(var k =details.col;k<=details.endCol;k++)
     {
-      temp=parseInt(ht.getDataAtCell(i, k));
-      if(isNaN(temp))
-        temp=0;
-      sum+=temp;
-    }
+      temp=ht.getDataAtCell(i, k);
+      if(temp!==null)
+      {
+        temp = temp.replace(/\$/g,'');
+        temp = parseInt(temp);
+        if(!isNaN(temp))
+        {
+          sum+=temp;
+        }
+      }
+      }
   }
   return sum;
 }
@@ -368,11 +380,19 @@ function functionAVG(details)
   {
     for(var k =details.col;k<=details.endCol;k++)
     {
-      temp=parseInt(ht.getDataAtCell(i, k));
-      if(isNaN(temp))
-        temp=0;
-      sum+=temp;
+      temp=ht.getDataAtCell(i, k);
+      if(temp!==null)
+      {
+        temp = temp.replace(/\$/g,'');
+        temp = parseInt(temp);
+        console.log(temp);
+        if(!isNaN(temp))
+        {
+          console.log("hi");
+          sum+=temp;
+        }
       count++;
+      }
     }
   }
   return sum/count;
@@ -382,13 +402,17 @@ function evaluateTableExpression(expression, selectedCell)
 {
       //replace all cell names with the values of those cells.
       //And replace SUM and AVG operations with their values.
-      
       var selected = [];
       selected[0] = selectedCell.row;
       selected[1] = selectedCell.col;
+      //ignore dollar signs
+      expression.replace(/\$/g,'');
       var SUMAVG = expression.match(SUMAVGRE);
+      var saGet = false;
+      if(SUMAVG!==null)
+        var saGet= true;
       //cycle through occurences of SUM or AVG functions
-      while(SUMAVG!==null)
+      while(saGet)
       {
         var expressionStart;
         var expressionEnd;
@@ -415,16 +439,26 @@ function evaluateTableExpression(expression, selectedCell)
         else
           insert = functionAVG(details);
         expression = expressionStart+insert+expressionEnd;
+        SUMAVG = null;
         //error returned as true
+        saGet = false;
         if(updateDependencyByDetails(details, selectedCell))
         {
-          return "#ERROR"
+          return "#ERROR";
         }
-        SUMAVG = expression.match(SUMAVGRE);
+        else
+        {
+            SUMAVG = expression.match(SUMAVGRE);
+            if(SUMAVG!==null)
+              var saGet= true;
+        }
       }
       var cellNames = expression.match(cellRE);
+      var cellGet = false;
+      if(cellNames!==null)
+        cellGet = true;
       //cycle through occurences of cell names.
-      while(cellNames!==null)
+      while(cellGet)
       {
           var expressionStart;
           var expressionEnd;
@@ -445,14 +479,34 @@ function evaluateTableExpression(expression, selectedCell)
           //update dependency table
           fillUsedBy(cellRow, cellCol, selected[0], selected[1], true);
           fillDependantOn(selected[0],selected[1],cellRow,cellCol, true);
+          //A note on the nature of javascript: if a variable is defined as null
+          //within a scope, it will be reinstantiated after leaving the scope.
+          //I want to set cellNames to null (similar to if a expression match
+          //failed) but cannot do so within a block. Thus, the default behavior
+          //is to set cellNames to null and define it if there are no errors.
+          cellGet = false;
+          //circular dependancy
           if(dependantOn[cellRow]!==undefined && dependantOn[cellRow][cellCol]!==undefined && 
           dependantOn[cellRow][cellCol][selected[0]]!==undefined &&
           dependantOn[cellRow][cellCol][selected[0]][selected[1]]!==undefined &&
           dependantOn[cellRow][cellCol][selected[0]][selected[1]])
           {
+            console.log("hi");
             return "#ERROR";
           }
-          cellNames = expression.match(cellRE);
+          else if((cellRow==selected[0])&&(cellCol==selected[1]))
+          {
+            //cell dependant on itself
+            console.log("hi");
+            return "#ERROR";
+          }
+          else
+          {
+              //no circular dependencies
+              cellNames = expression.match(cellRE);
+              if(cellNames!==null)
+                cellGet = true;
+          }
       }
       if(expression.indexOf("#ERROR")>=0)
       {
@@ -535,5 +589,3 @@ function convertCellTextToNumber(string)
   }
   return string;
 }
-
-
