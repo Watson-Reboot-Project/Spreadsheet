@@ -46,7 +46,6 @@ function functionParse(functionString)
       var substitute = functionString.substr(1);
       substitute = substitute.replace(/ /g,'');
       substitute = substitute.replace(/\$/g,'');
-      console.log(substitute);
 			//always attempt to evaluate as expressions in the most up-to-date builds.
 			substitute = substituteParenthesis(substitute);
 			if(expressionRE.test(substitute))
@@ -93,6 +92,7 @@ function functionParse(functionString)
       //Include everything after '='
       expressionString = functionString.substr(1);
       details.row = expressionString.replace(/ /g,'');
+      details.row = details.row.replace(/\$/g,'');
       
 		}
 		else

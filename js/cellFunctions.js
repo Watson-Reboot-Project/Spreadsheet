@@ -4,7 +4,14 @@
 var ht = $("#"+tableDiv.id).handsontable('getInstance');
 
 var tempCopy;
+var tempSelected;
 var offset;
+var debug = false;
+var absolute = /[^~]\$[A-Z]\$\d+/;
+var absoluteRow = /[^~]\$[A-Z]\d+/;
+//note: [^\$]? prevents a dollar sign from appearing before the remaining regex.
+var absoluteCol = /[^~\$][A-Z]\$\d+/;
+var nonabsolute = /[^~\$][A-Z]\d+/;
 
 //Redoes the last undone operation
 function undo() {
@@ -128,9 +135,6 @@ function format()
         formatArray[i][k] = choice;
         if(funcTracker[i*ht.countRows()+k]!==undefined)
         {
-            console.log(i);
-            console.log(k);
-            console.log(funcTracker[i*ht.countRows()+k]);
             ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
         }
 	    }
@@ -143,6 +147,7 @@ function format()
 function cut() {
 	if (ht.getSelected() != undefined) {
 		var selected = topLeft(ht.getSelected());
+		tempSelected = selected;
 		tempCopy = ht.getData(selected[0], selected[1], selected[2], selected[3]);
 		var allZero = emptyArray(selected[0], selected[1], selected[2], selected[3]);
 		ht.populateFromArray(selected[0],selected[1], allZero, selected[2], selected[3]);
@@ -161,6 +166,7 @@ function cut() {
 function copy() {
 	if (ht.getSelected() != undefined) {
 		var selected = topLeft(ht.getSelected());
+		tempSelected = selected;
 		tempCopy = ht.getData(selected[0], selected[1], selected[2], selected[3]);
 	}
 }
@@ -168,7 +174,14 @@ function copy() {
 //Handles the paste operation
 function paste() {
 	var selected = ht.getSelected();
-	if(tempCopy != undefined && selected != undefined) {
+	console.log(tempCopy);
+	if(debug && tempCopy!== undefined)
+	{
+      var fillerArray = generateFillerArray(tempSelected, selected);
+      console.log(fillerArray);
+      ht.populateFromArray(selected[0],selected[1], fillerArray, selected[0]+fillerArray.length-1, selected[1]+fillerArray[0].length-1);
+	}
+	else if(tempCopy != undefined && selected != undefined) {
 		ht.populateFromArray(selected[0], selected[1], tempCopy, selected[0]+tempCopy.length-1, selected[1]+tempCopy[0].length-1);
 		/**
 		for(var i = selected[0]; i < tempCopy.length + selected[0]; i++) {
@@ -257,8 +270,8 @@ function updateDependencyArrays(row, col, endRow, endCol, cellRow, cellCol)
       //is known to be true. If dependantOn[i][k][cellCol][cellRow] is also true,
       //then a circular dependancy has been found.
       if(dependantOn[i]!==undefined && dependantOn[i][k]!==undefined && 
-      dependantOn[i][k][cellCol]!==undefined &&
-      dependantOn[i][k][cellCol][cellRow]!==undefined && dependantOn[i][k][cellCol][cellRow])
+      dependantOn[i][k][cellRow]!==undefined &&
+      dependantOn[i][k][cellRow][cellCol]!==undefined && dependantOn[i][k][cellRow][cellCol])
       {
         error = true;
       }
@@ -385,10 +398,9 @@ function functionAVG(details)
       {
         temp = temp.replace(/\$/g,'');
         temp = parseInt(temp);
-        console.log(temp);
         if(!isNaN(temp))
         {
-          console.log("hi");
+  
           sum+=temp;
         }
       count++;
@@ -491,13 +503,11 @@ function evaluateTableExpression(expression, selectedCell)
           dependantOn[cellRow][cellCol][selected[0]][selected[1]]!==undefined &&
           dependantOn[cellRow][cellCol][selected[0]][selected[1]])
           {
-            console.log("hi");
             return "#ERROR";
           }
           else if((cellRow==selected[0])&&(cellCol==selected[1]))
           {
             //cell dependant on itself
-            console.log("hi");
             return "#ERROR";
           }
           else
@@ -588,4 +598,123 @@ function convertCellTextToNumber(string)
     }
   }
   return string;
+}
+
+//Given an input selection index and a target selection index,
+//returns a filler array. This filler array has the intended function
+//array for the target selection, with function strings modified relative to
+//the original selection.
+function generateFillerArray(copySelection, pasteSelection)
+{
+    //watson labs handles copy/paste from the top left corner.
+    //make sure all selections are in proper order.
+    var swap;
+    if(copySelection[0]>copySelection[2])
+    {
+        swap = copySelection[2];
+        copySelection[2] = copySelection[0];
+        copySelection[0] = swap;
+    }
+    if(copySelection[1]>copySelection[3])
+    {
+        swap = copySelection[3];
+        copySelection[3] = copySelection[1];
+        copySelection[1] = swap;
+        
+    }
+    if(pasteSelection[0]>pasteSelection[2])
+    {
+        swap = pasteSelection[2];
+        pasteSelection[2] = pasteSelection[0];
+        pasteSelection[0] = swap;
+        
+    }
+    if(Selection[0]>Selection[2])
+    {
+        swap = pasteSelection[3];
+        pasteSelection[3] = pasteSelection[1];
+        pasteSelection[1] = swap;
+        
+    }
+    var fillerArray = [];
+    //selection to be copied is exactly one cell.
+    //fill selection size with the function string of the copied cell.
+    if(copySelection[2]==copySelection[0] && copySelection[3]==copySelection[1])
+    {
+      initialRow = copySelection[0];
+      initialCol = copySelection[1];
+      var counti = 0;
+      var countk = 0;
+      for(var i = pasteSelection[0]; i<=pasteSelection[2]; i++)
+      {
+          fillerArray[counti] = [];
+          for(var k = pasteSelection[1]; k<=pasteSelection[3]; k++)
+          {
+              fillerArray[counti][countk] = modifiedFunctionString(initialRow, initialCol, i, k);
+              countk++;
+          }
+          counti++;
+      }
+    }
+    else//selection is more than one cell. Watson ignore new selection size.
+    {
+    }
+    return fillerArray;
+}
+
+//given an initial cell index and the pasted cell index, constructs the
+//appropriate function string.
+function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol)
+{
+    //get function string
+    var oldFS = funcTracker[initialRow*ht.countRows()+initialCol].funcString;
+    //an equal sign means that the function string is attempting to be
+    //a valid expression, so cell references must be parsed.
+    if(oldFS.indexOf("=")==0)
+    {
+      //calculate differences
+      var rowDif = pasteRow-initialRow;
+      var colDif = pasteCol-initialCol;
+      var regex = null;//oldFS.match(absolute);
+      //declare variables
+      var FSStart, FSEnd, insert, modifiedRow, modifiedCol;
+      while(regex!==null)
+      {
+        regex = oldFs.match(absolute);
+      }
+      //regex = oldFS.match(absoluteRow);
+      while(regex!==null)
+      {
+        regex = oldFs.match(absoluteRow);
+      }
+      //regex = oldFS.match(absoluteCol);
+      //NOTE: these next two would create false positives if
+      //the regular expression did not add an extra character to check that
+      //there was no "~"(my "got this one already" check) before the regex. It does not need to check for an empty string
+      //because there will always be something before the desired regex due to the "=".
+      //because of this, the actual regex we want starts at index 1 instead of 0.
+      while(regex!==null)
+      {
+        FSStart = oldFS.substr(0,regex.index);
+        FSEnd = oldFS.substr(regex.index+regex[0].length);
+        modifiedRow = (getRowFromNumber(regex[0].substr(3))+rowDif+1).toString();
+        modifiedCol = String.fromCharCode(getColFromChar(regex[0].substr(2,1))+65);
+        insert = oldFS.charAt(regex.index)+"~"+"$"+modifiedCol+modifiedRow;
+        oldFS = FSStart+insert+FSEnd;
+        regex = oldFS.match(absoluteCol);
+      }
+      regex = oldFS.match(nonabsolute);
+      while(regex!==null)
+      {
+        FSStart = oldFS.substr(0,regex.index);
+        FSEnd = oldFS.substr(regex.index+regex[0].length);
+        modifiedRow = (getRowFromNumber(regex[0].substr(2))+rowDif+1).toString();
+        modifiedCol = String.fromCharCode(getColFromChar(regex[0].substr(1,1))+colDif+65);
+        insert = oldFS.charAt(regex.index)+"~"+modifiedCol+modifiedRow;
+        oldFS = FSStart+insert+FSEnd;
+        regex = oldFS.match(nonabsolute);
+      }
+      oldFS = oldFS.replace(/~/g, '');
+      return oldFS;
+    }
 }
