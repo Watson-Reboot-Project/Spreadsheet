@@ -91,15 +91,19 @@ $(document).ready(function() {
 		afterChange: function(changes, source) {
 			var selected = ht.getSelected();
 			var isFunction = false
-			for(var i = 0; i < funcTracker.length; i++) {
+			var func = funcTracker[selected[0]*ht.countRows+selected[1]];
+			if(func!== undefined)
+        isFunction = true;
+			/*for(var i = 0; i < funcTracker.length; i++) {
 				if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
           changeInput(funcTracker[i].funcString);
 					isFunction = true;
 					break;
-				}
-			}
+				}*/
 			//After a cell is changed, it needs to notify any cell that depends on it.
 			notifyDependants(changes[0][0], changes[0][1]);
+			if(isFunction)
+        changeInput(func.funcString);
 			if(!isFunction)
 			 changeInput(ht.getDataAtCell(selected[0], selected[1]));
 		}
@@ -166,15 +170,21 @@ $(document).ready(function() {
         console.log(usedBy[selected[0]][selected[1]]);
       if(dependantOn[selected[0]]!==undefined && dependantOn[selected[0]][selected[1]]!==undefined)
         console.log(dependantOn[selected[0]][selected[1]]);*/
-			var isFunction = false;
-			for(var i = 0; i < funcTracker.length; i++) {
+      var isFunction = false;
+			var func = funcTracker[selected[0]*ht.countRows+selected[1]];
+			if(func!== undefined)
+        isFunction = true;
+			/*for(var i = 0; i < funcTracker.length; i++) {
 				if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
 					changeInput(funcTracker[i].funcString);
 					isFunction = true;
 					break;
 				}
-			}
-			if(!isFunction) changeInput(ht.getDataAtCell(selected[0], selected[1]));
+			}*/
+			if(isFunction)
+        changeInput(func.funcString);
+			else
+        changeInput(ht.getDataAtCell(selected[0], selected[1]));
 		}
 	});
 

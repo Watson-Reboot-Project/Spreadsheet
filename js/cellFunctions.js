@@ -6,11 +6,11 @@ var ht = $("#"+tableDiv.id).handsontable('getInstance');
 var tempCopy;
 var tempSelected;
 var offset;
-var debug = false;
+var debug = true;
 var absolute = /[^~]\$[A-Z]\$\d+/;
-var absoluteRow = /[^~]\$[A-Z]\d+/;
+var absoluteCol = /[^~]\$[A-Z]\d+/;
 //note: [^\$]? prevents a dollar sign from appearing before the remaining regex.
-var absoluteCol = /[^~\$][A-Z]\$\d+/;
+var absoluteRow = /[^~\$][A-Z]\$\d+/;
 var nonabsolute = /[^~\$][A-Z]\d+/;
 
 //Redoes the last undone operation
@@ -144,41 +144,27 @@ function format()
 }
 
 //Handles the cut operation
-function cut() {
-	if (ht.getSelected() != undefined) {
-		var selected = topLeft(ht.getSelected());
-		tempSelected = selected;
-		tempCopy = ht.getData(selected[0], selected[1], selected[2], selected[3]);
+function cut()
+{
+		fillTempCopy();
+    var selected = topLeft(ht.getSelected());
 		var allZero = emptyArray(selected[0], selected[1], selected[2], selected[3]);
 		ht.populateFromArray(selected[0],selected[1], allZero, selected[2], selected[3]);
-		/**
-		for(var i = selected[0]; i <= selected[2]; i++) {
-			for(var y = selected[1]; y <= selected[3]; y++) {
-				ht.setDataAtCell(i, y, null, true);
-			}
-		}
-		*/
-		
-	}
 }
 
 //Handles the copy operation
-function copy() {
-	if (ht.getSelected() != undefined) {
-		var selected = topLeft(ht.getSelected());
-		tempSelected = selected;
-		tempCopy = ht.getData(selected[0], selected[1], selected[2], selected[3]);
-	}
+function copy()
+{
+    //fill tempCopy with an array of the functionStrings of the selected index.
+		fillTempCopy();
 }
 
 //Handles the paste operation
 function paste() {
 	var selected = ht.getSelected();
-	console.log(tempCopy);
 	if(debug && tempCopy!== undefined)
 	{
       var fillerArray = generateFillerArray(tempSelected, selected);
-      console.log(fillerArray);
       ht.populateFromArray(selected[0],selected[1], fillerArray, selected[0]+fillerArray.length-1, selected[1]+fillerArray[0].length-1);
 	}
 	else if(tempCopy != undefined && selected != undefined) {
@@ -584,6 +570,47 @@ function fillDependantOn(row1, col1, row2, col2, value)
   dependantOn[row1][col1][row2][col2] = value;
 }
 
+//generates the tempCopy and tempSelcted from the currently selected section of cells.
+//Always changes the selection so that it starts from the top-left corner.
+function fillTempCopy()
+{
+  tempSelected = ht.getSelected();
+  tempCopy = [];
+  //make sure tempSelected begins at topleft corner.
+  var swap;
+    if(tempSelected[0]>tempSelected[2])
+    {
+        swap = tempSelected[2];
+        tempSelected[2] = tempSelected[0];
+        tempSelected[0] = swap;
+    }
+    if(tempSelected[1]>tempSelected[3])
+    {
+        swap = tempSelected[3];
+        tempSelected[3] = tempSelected[1];
+        tempSelected[1] = swap;
+        
+    }
+    var counti = 0;
+    var countk = 0;
+    for(var i = tempSelected[0]; i<=tempSelected[2]; i++)
+    {
+        tempCopy[counti] = [];
+        countk = 0;
+        for(var k = tempSelected[1]; k<=tempSelected[3]; k++)
+        {
+            tempCopy[counti][countk] = funcTracker[i*ht.countRows()+k].funcString;
+            //if the function string was undefined, set to empty string so
+            //it will be treated as a string.
+            if(tempCopy[counti][countk]=== undefined)
+                tempCopy[counti][countk] = "";
+            countk++;
+        }
+        counti++;
+    }
+      
+}
+
 function convertCellTextToNumber(string)
 {
   if(string!==undefined && string!== null)
@@ -629,7 +656,7 @@ function generateFillerArray(copySelection, pasteSelection)
         pasteSelection[0] = swap;
         
     }
-    if(Selection[0]>Selection[2])
+    if(pasteSelection[0]>pasteSelection[2])
     {
         swap = pasteSelection[3];
         pasteSelection[3] = pasteSelection[1];
@@ -639,7 +666,7 @@ function generateFillerArray(copySelection, pasteSelection)
     var fillerArray = [];
     //selection to be copied is exactly one cell.
     //fill selection size with the function string of the copied cell.
-    if(copySelection[2]==copySelection[0] && copySelection[3]==copySelection[1])
+    if(copySelection[0] == copySelection[2])
     {
       initialRow = copySelection[0];
       initialCol = copySelection[1];
@@ -648,9 +675,10 @@ function generateFillerArray(copySelection, pasteSelection)
       for(var i = pasteSelection[0]; i<=pasteSelection[2]; i++)
       {
           fillerArray[counti] = [];
+          countk=0;
           for(var k = pasteSelection[1]; k<=pasteSelection[3]; k++)
           {
-              fillerArray[counti][countk] = modifiedFunctionString(initialRow, initialCol, i, k);
+              fillerArray[counti][countk] = modifiedFunctionString(initialRow, initialCol, i, k, tempCopy[0][0]);
               countk++;
           }
           counti++;
@@ -664,10 +692,8 @@ function generateFillerArray(copySelection, pasteSelection)
 
 //given an initial cell index and the pasted cell index, constructs the
 //appropriate function string.
-function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol)
+function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldFS)
 {
-    //get function string
-    var oldFS = funcTracker[initialRow*ht.countRows()+initialCol].funcString;
     //an equal sign means that the function string is attempting to be
     //a valid expression, so cell references must be parsed.
     if(oldFS.indexOf("=")==0)
@@ -675,19 +701,32 @@ function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol)
       //calculate differences
       var rowDif = pasteRow-initialRow;
       var colDif = pasteCol-initialCol;
-      var regex = null;//oldFS.match(absolute);
+      var regex = null;
+      oldFS.match(absolute);
       //declare variables
       var FSStart, FSEnd, insert, modifiedRow, modifiedCol;
       while(regex!==null)
       {
+        FSStart = oldFS.substr(0,regex.index);
+        FSEnd = oldFS.substr(regex.index+regex[0].length);
+        modifiedRow = (getRowFromNumber(regex[0].substr(4))+1).toString();
+        modifiedCol = String.fromCharCode(getColFromChar(regex[0].substr(2,1))+65);
+        insert = oldFS.charAt(regex.index)+"~"+"$"+modifiedCol+"$"+modifiedRow;
+        oldFS = FSStart+insert+FSEnd;
         regex = oldFs.match(absolute);
       }
-      //regex = oldFS.match(absoluteRow);
+      regex = oldFS.match(absoluteRow);
       while(regex!==null)
       {
-        regex = oldFs.match(absoluteRow);
+        FSStart = oldFS.substr(0,regex.index);
+        FSEnd = oldFS.substr(regex.index+regex[0].length);
+        modifiedRow = (getRowFromNumber(regex[0].substr(3))+1).toString();
+        modifiedCol = String.fromCharCode(getColFromChar(regex[0].substr(1,1))+65+colDif);
+        insert = oldFS.charAt(regex.index)+"~"+modifiedCol+"$"+modifiedRow;
+        oldFS = FSStart+insert+FSEnd;
+        regex = oldFS.match(absoluteRow);
       }
-      //regex = oldFS.match(absoluteCol);
+      regex = oldFS.match(absoluteCol);
       //NOTE: these next two would create false positives if
       //the regular expression did not add an extra character to check that
       //there was no "~"(my "got this one already" check) before the regex. It does not need to check for an empty string
