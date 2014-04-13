@@ -17,11 +17,11 @@ var tableDiv = document.createElement('div');
 tableDiv.id = "table" + figNum;
 
 //input for cell functions
-var input = document.createElement('input');
-input.id = "input" + figNum;
-input.style.width = "600px";
-input.type = "text";
-input.name = "Functions";
+var functionBox = document.createElement('input');
+functionBox.id = "functionBox" + figNum;
+functionBox.style.width = "600px";
+functionBox.type = "text";
+functionBox.name = "Functions";
 
 //Div for buttons
 var buttonDiv = document.createElement('div');
@@ -116,7 +116,7 @@ row_1.appendChild(tableHolder);
 row_1.appendChild(buttonDiv);
 
 var container = document.getElementById("container");
-container.appendChild(input);
+container.appendChild(functionBox);
 container.appendChild(row_1);
 
 

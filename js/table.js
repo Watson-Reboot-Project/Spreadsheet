@@ -6,7 +6,7 @@
  //Note by Mitchell Martin- I'm including the functionality of the input
  //box in here too. Input/function boxes are an integral part of spreadsheet
  //programs, and they are heavily intertwined.
- var ib = $("#"+input.id);
+ var ib = $("#"+functionBox.id);
  
  //Creates a 4-dimensional table which stores data for which other cells use a certain cell.
  //The way this is used is that the first two dimensions locate the cell which is depended on.
@@ -91,7 +91,7 @@ $(document).ready(function() {
 		afterChange: function(changes, source) {
 			var selected = ht.getSelected();
 			var isFunction = false
-			var func = funcTracker[selected[0]*ht.countRows+selected[1]];
+			var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
 			if(func!== undefined)
         isFunction = true;
 			/*for(var i = 0; i < funcTracker.length; i++) {
@@ -171,7 +171,7 @@ $(document).ready(function() {
       if(dependantOn[selected[0]]!==undefined && dependantOn[selected[0]][selected[1]]!==undefined)
         console.log(dependantOn[selected[0]][selected[1]]);*/
       var isFunction = false;
-			var func = funcTracker[selected[0]*ht.countRows+selected[1]];
+			var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
 			if(func!== undefined)
         isFunction = true;
 			/*for(var i = 0; i < funcTracker.length; i++) {
@@ -300,13 +300,13 @@ function pressEnter(event)
 	var selected = ht.getSelected();
 	if(!event.shiftKey)
 	{
-		//event.stopImmediatePropagation();
-		ht.selectCell(selected[0]+1, selected[1]);
+		event.stopImmediatePropagation();
+		//ht.selectCell(selected[0]+1, selected[1], selected[0]+1, selected[1], true);
 	}
 	else
 	{
-		//event.stopImmediatePropagation();
-		ht.selectCell(selected[0]-1, selected[1]);
+		event.stopImmediatePropagation();
+		//ht.selectCell(selected[0]-1, selected[1], selected[0]-1, selected[1], true);
 	}
 }
 

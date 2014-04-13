@@ -218,7 +218,7 @@ function topLeft(selected) {
 function changeInput(text) {
   if(!(ib.is(":focus")))
   {
-    $("#" + input.id).val(text);
+    $("#" + functionBox.id).val(text);
   }
 }
 
@@ -613,15 +613,21 @@ function fillTempCopy()
 
 function convertCellTextToNumber(string)
 {
+  
   if(string!==undefined && string!== null)
   {
     //handle monetary values
     string = string.replace("$","");
     //checks if result is number
-    string = parseFloat(string);
-    if(isNaN(string))
+    if(string.length==0)
+      string = 0;
+    else
     {
-      string="#ERROR";
+      string = parseFloat(string);
+      if(isNaN(string))
+      {
+        string="#ERROR";
+      }
     }
   }
   return string;
@@ -666,7 +672,7 @@ function generateFillerArray(copySelection, pasteSelection)
     var fillerArray = [];
     //selection to be copied is exactly one cell.
     //fill selection size with the function string of the copied cell.
-    if(copySelection[0] == copySelection[2])
+    if(copySelection[0] == copySelection[2] && copySelection[1] == copySelection[3])
     {
       initialRow = copySelection[0];
       initialCol = copySelection[1];
@@ -684,8 +690,20 @@ function generateFillerArray(copySelection, pasteSelection)
           counti++;
       }
     }
-    else//selection is more than one cell. Watson ignore new selection size.
+    else//selection is more than one cell. Watson ignores new selection size.
     {
+       var counti = 0;
+       var countk = 0;
+       for(var i = copySelection[0]; i<=copySelection[2]; i++)
+       {
+          fillerArray[counti] = [];
+          for(var k = copySelection[1]; k<=copySelection[3]; k++)
+          {
+              fillerArray[counti][countk] = modifiedFunctionString(i, k, pasteSelection[0]+counti, pasteSelection[1]+countk, tempCopy[counti][countk]);
+              countk++;
+          }
+          counti++;
+       }
     }
     return fillerArray;
 }
