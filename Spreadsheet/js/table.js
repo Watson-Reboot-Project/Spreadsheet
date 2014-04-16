@@ -48,7 +48,7 @@ formatOption = {
  });
 
 //global variables
-var currSelect;
+var prevSelect;
 var funcTracker = new Array();
 var meditorManager;
 var currentEditor;
@@ -167,6 +167,12 @@ $(document).ready(function() {
 	//Listens for selection changing
 	$("#" + tableDiv.id).handsontable({
 		afterSelection: function(r, c, r2, c2) {
+      if(prevSelect!==undefined)
+      {
+        func = funcTracker[prevSelect[0]*ht.countRows()+prevSelect[1]];
+        if(func!==undefined)
+          ht.setDataAtCell(prevSelect[0], prevSelect[1], func.funcString);
+      }
 			var selected = ht.getSelected();
       /*if(usedBy[selected[0]]!==undefined && usedBy[selected[0]][selected[1]]!==undefined)
         console.log(usedBy[selected[0]][selected[1]]);
@@ -285,16 +291,18 @@ $(document).ready(function() {
 	//Listens for double click MITCHELL'S NOTE
 	//Editor works just as well as typing into the cell itself.
 	//Giving all clicks this functionality makes mobile easier to handle.
-	$(document).on('click', function(evt) {
+	$('#' + tableDiv.id).on('click', function(evt) {
 		var selected = ht.getSelected();
-		meditorManager.openEditor();
+		console.log(selected);
+		if(selected[0]==selected[2]&&selected[1]==selected[3])
+      meditorManager.openEditor();
 		var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
 		if(func!==undefined)
 		{
       currentEditor.setValue(func.funcString);
     }
 		//Deprecated? Need to check during refactoring.
-		currSelect = topLeft(selected);
+		prevSelect = selected;
 		/* obsolete with the introduction of function strings.
 		if(selected != undefined) {
 			var data = ht.getDataAtCell(selected[0], selected[1]);
