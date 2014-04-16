@@ -10944,6 +10944,7 @@ function WalkontableEvent(instance) {
   });
   $(this.instance.wtTable.TABLE).on('vmouseover', function(event)
   {
+    event.preventDefault();
     onMouseOver(event);
   });
 /*  $(this.instance.wtTable.TABLE).on('mouseout', function(event)
