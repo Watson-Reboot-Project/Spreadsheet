@@ -987,6 +987,10 @@ Handsontable.Core = function (rootElement, userSettings) {
 
     this.view = new Handsontable.TableView(this);
     editorManager = new Handsontable.EditorManager(instance, priv, selection, datamap);
+    //MITCHELLSNOTE
+    //jquery does not allow access to the editor manager normally,
+    //but I would very much like to have it.
+    meditorManager = editorManager;
 
     this.updateSettings(priv.settings, true);
     this.parseSettingsFromDOM();
@@ -2479,45 +2483,11 @@ Handsontable.TableView = function (instance) {
       instance.destroyEditor();
     }
   });
-  
-  //MITCHELLSNOTE
-  //mobile mousedown event.
-  $documentElement.on('vmousedown.' + instance.guid, function (event) {
-    event.preventDefault();
-    var next = event.target;
-
-    if (next !== that.wt.wtTable.spreader) { //immediate click on "spreader" means click on the right side of vertical scrollbar
-      while (next !== document.documentElement) {
-        if (next === null) {
-          return; //click on something that was a row but now is detached (possibly because your click triggered a rerender)
-        }
-        if (next === instance.rootElement[0] || next.nodeName === 'HANDSONTABLE-TABLE') {
-          return; //click inside container or Web Component (HANDSONTABLE-TABLE is the name of the custom element)
-        }
-        next = next.parentNode;
-      }
-    }
-
-    if (that.settings.outsideClickDeselects) {
-      instance.deselectCell();
-    }
-    else {
-      instance.destroyEditor();
-    }
-  });
-  //MITCHELLSNOTE
 
   instance.rootElement.on('mousedown.handsontable', '.dragdealer', function () {
     instance.destroyEditor();
   });
-  
-  //MITCHELLSNOTE
-  instance.rootElement.on('vmousedown.handsontable', '.dragdealer', function () {
-    instance.destroyEditor();
-  });
-  //MITCHELLSNOTE
 
-  //MITCHELLSNOTE: shouldn't have to do anything about this.
   instance.$table.on('selectstart', function (event) {
     if (that.settings.fragmentSelection) {
       return;
@@ -3119,7 +3089,6 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
 //        that.instance.destroyEditor();
         that.openEditor();
       }
-
       instance.view.wt.update('onCellDblClick', onDblClick);
 
       instance.addHook('afterDestroy', function(){
@@ -10855,7 +10824,6 @@ function WalkontableEvent(instance) {
 
   var onMouseDown = function (event) {
     var cell = that.parentCell(event.target);
-
     if (that.wtDom.hasClass(event.target, 'corner')) {
       that.instance.getSetting('onCellCornerMouseDown', event, event.target);
     }
@@ -10929,22 +10897,17 @@ function WalkontableEvent(instance) {
     }
   };
 
-  $(this.instance.wtTable.holder).on('mousedown', onMouseDown);
-  $(this.instance.wtTable.TABLE).on('mouseover', function(event)
-  {
-    onMouseOver(event);
-  });
-//  $(this.instance.wtTable.TABLE).on('mouseout', onMouseOut);
-  $(this.instance.wtTable.holder).on('mouseup', onMouseUp);
-  //MITNOTEM
+  //MITNOTEM replaced normal event triggers with v-events. IE: mobile jquery events.
+  //$(this.instance.wtTable.holder).on('mousedown', onMouseDown);
+  //$(this.instance.wtTable.TABLE).on('mouseover', onMouseOver);
+//DISABLED IN BASE HANDSONTABLE  $(this.instance.wtTable.TABLE).on('mouseout', onMouseOut);
+  //$(this.instance.wtTable.holder).on('mouseup', onMouseUp);
   $(this.instance.wtTable.holder).on('vmousedown', function(event)
   {
-    event.preventDefault();
     onMouseDown(event);
   });
   $(this.instance.wtTable.TABLE).on('vmouseover', function(event)
   {
-    event.preventDefault();
     onMouseOver(event);
   });
 /*  $(this.instance.wtTable.TABLE).on('mouseout', function(event)
@@ -10954,7 +10917,6 @@ function WalkontableEvent(instance) {
 */
   $(this.instance.wtTable.holder).on('vmouseup', function(event)
   {
-    event.preventDefault();
     onMouseUp(event);
   });
   //MITNOTEM

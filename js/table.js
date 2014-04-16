@@ -50,6 +50,7 @@ formatOption = {
 //global variables
 var currSelect;
 var funcTracker = new Array();
+var meditorManager;
 var currentEditor;
 
 $('#' + tableDiv.id).handsontable({
@@ -281,14 +282,24 @@ $(document).ready(function() {
 
 	});
 	
-	//Listens for double click
-	$(document).on('dblclick', function(evt) {
-		var selected = topLeft(ht.getSelected());
-		currSelect = selected;
+	//Listens for double click MITCHELL'S NOTE
+	//Editor works just as well as typing into the cell itself.
+	//Giving all clicks this functionality makes mobile easier to handle.
+	$(document).on('click', function(evt) {
+		var selected = ht.getSelected();
+		meditorManager.openEditor();
+		var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
+		if(func!==undefined)
+		{
+      currentEditor.setValue(func.funcString);
+    }
+		//Deprecated? Need to check during refactoring.
+		currSelect = topLeft(selected);
+		/* obsolete with the introduction of function strings.
 		if(selected != undefined) {
 			var data = ht.getDataAtCell(selected[0], selected[1]);
 			if(data != null) changeInput(data);
-		}
+		}*/
 	});
 	
 });
