@@ -1,3 +1,5 @@
+//NOTE TO SELF: onMouseDown, onMouseOver etc. Check line 10930ish
+
 /**
  * Handsontable 0.10.3
  * Handsontable is a simple jQuery plugin for editable tables with basic copy-paste compatibility with Excel and Google Docs
@@ -8,6 +10,12 @@
  *
  * Date: Mon Feb 10 2014 14:15:11 GMT+0100 (CET)
  */
+ /**
+  * Note by Mitchell James Martin: this program has been slightly edited for
+  * mobile input events and reporting of editors. I've enclosed sections I've edited
+  * with MITCHELLSNOTE comments.
+  * MITNOTEM refers to my notes about mobile development
+  */
 /*jslint white: true, browser: true, plusplus: true, indent: 4, maxerr: 50 */
 
 var Handsontable = { //class namespace
@@ -2413,6 +2421,7 @@ Handsontable.TableView = function (instance) {
   instance.$table = $(table);
   instance.rootElement.prepend(instance.$table);
 
+  //MITNOTEM: this mousedown and keyup shouldn't change on mobile.
   instance.rootElement.on('mousedown.handsontable', function (event) {
     if (!that.isTextSelectionAllowed(event.target)) {
       clearTextSelection();
@@ -2470,11 +2479,45 @@ Handsontable.TableView = function (instance) {
       instance.destroyEditor();
     }
   });
+  
+  //MITCHELLSNOTE
+  //mobile mousedown event.
+  $documentElement.on('vmousedown.' + instance.guid, function (event) {
+    event.preventDefault();
+    var next = event.target;
+
+    if (next !== that.wt.wtTable.spreader) { //immediate click on "spreader" means click on the right side of vertical scrollbar
+      while (next !== document.documentElement) {
+        if (next === null) {
+          return; //click on something that was a row but now is detached (possibly because your click triggered a rerender)
+        }
+        if (next === instance.rootElement[0] || next.nodeName === 'HANDSONTABLE-TABLE') {
+          return; //click inside container or Web Component (HANDSONTABLE-TABLE is the name of the custom element)
+        }
+        next = next.parentNode;
+      }
+    }
+
+    if (that.settings.outsideClickDeselects) {
+      instance.deselectCell();
+    }
+    else {
+      instance.destroyEditor();
+    }
+  });
+  //MITCHELLSNOTE
 
   instance.rootElement.on('mousedown.handsontable', '.dragdealer', function () {
     instance.destroyEditor();
   });
+  
+  //MITCHELLSNOTE
+  instance.rootElement.on('vmousedown.handsontable', '.dragdealer', function () {
+    instance.destroyEditor();
+  });
+  //MITCHELLSNOTE
 
+  //MITCHELLSNOTE: shouldn't have to do anything about this.
   instance.$table.on('selectstart', function (event) {
     if (that.settings.fragmentSelection) {
       return;
@@ -3071,6 +3114,7 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
       }
       $document.on('keydown.handsontable.' + instance.guid, onKeyDown);
 
+      //MITMNOTE: not sure if mobile has a double click.
       function onDblClick() {
 //        that.instance.destroyEditor();
         that.openEditor();
@@ -9288,7 +9332,6 @@ DragToScroll.prototype.check = function (x, y) {
     //x is more than right
     diffX = x - this.boundaries.right;
   }
-
   this.callback(diffX, diffY);
 };
 
@@ -10887,9 +10930,33 @@ function WalkontableEvent(instance) {
   };
 
   $(this.instance.wtTable.holder).on('mousedown', onMouseDown);
-  $(this.instance.wtTable.TABLE).on('mouseover', onMouseOver);
+  $(this.instance.wtTable.TABLE).on('mouseover', function(event)
+  {
+    onMouseOver(event);
+  });
 //  $(this.instance.wtTable.TABLE).on('mouseout', onMouseOut);
   $(this.instance.wtTable.holder).on('mouseup', onMouseUp);
+  //MITNOTEM
+  $(this.instance.wtTable.holder).on('vmousedown', function(event)
+  {
+    event.preventDefault();
+    onMouseDown(event);
+  });
+  $(this.instance.wtTable.TABLE).on('vmouseover', function(event)
+  {
+    onMouseOver(event);
+  });
+/*  $(this.instance.wtTable.TABLE).on('mouseout', function(event)
+  {
+    event.preventDefault();
+  });
+*/
+  $(this.instance.wtTable.holder).on('vmouseup', function(event)
+  {
+    event.preventDefault();
+    onMouseUp(event);
+  });
+  //MITNOTEM
 }
 
 WalkontableEvent.prototype.parentCell = function (elem) {

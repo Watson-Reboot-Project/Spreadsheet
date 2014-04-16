@@ -1,5 +1,6 @@
 /*
- * This handles the functionality of the table
+ * This handles the functionality of the table and all touch/click/keypresses not handled
+ * by the handsontable library.
  * */
  
  
@@ -301,12 +302,12 @@ function pressEnter(event)
 	if(!event.shiftKey)
 	{
 		event.stopImmediatePropagation();
-		//ht.selectCell(selected[0]+1, selected[1], selected[0]+1, selected[1], true);
+		ht.selectCell(selected[0]+1, selected[1], selected[0]+1, selected[1], true);
 	}
 	else
 	{
 		event.stopImmediatePropagation();
-		//ht.selectCell(selected[0]-1, selected[1], selected[0]-1, selected[1], true);
+		ht.selectCell(selected[0]-1, selected[1], selected[0]-1, selected[1], true);
 	}
 }
 
