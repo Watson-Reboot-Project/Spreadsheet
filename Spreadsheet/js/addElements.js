@@ -1,6 +1,17 @@
 /*
  * This handles adding all elements to the document body
  * */
+ 
+/*
+  Story time: jquery mobile has its own CSS which is completely anathema to
+  the watson reboot. The CSS file is also required or jquery mobile or else
+  it puts a perpetual loading message at the bottom of the screen. The solution?
+  Don't let jquery mobile initialize the page.
+*/
+jQuery(document).on("mobileinit", function() {
+    jQuery.mobile.autoInitializePage = false;
+});
+ 
 var figNum = 0;
 
 //div for first row

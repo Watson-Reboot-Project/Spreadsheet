@@ -111,38 +111,39 @@ function format()
 	var options = ["No Format", "1", "1.0", "1.00", "1.000", "$1.00"];
 	var choice;
 	var div = document.getElementById("selectorDiv1");
-	console.log(div);
-	new Selector().open("Format Number", options, function(selection)
-	{
+	var sel = new Selector();
+	sel.open("Format Number", options, function(selection)
+{
+
     if(selection!==null)
     {
       if (selection.indexOf("$1.00")>=0)
-      choice = formatOption.DOLLARS;
-    else if(selection.indexOf("1.000")>=0)
-      choice = formatOption.THREE;
-    else if(selection.indexOf("1.00")>=0)
-      choice = formatOption.TWO;
-    else if(selection.indexOf("1.0")>=0)
-      choice = formatOption.ONE;
-    else if(selection.indexOf("1")>=0)
-      choice = formatOption.ZERO;
-    else if(selection.indexOf("No Format")>=0)
-      choice = formatOption.FNONE;
-    for(var i = row; i <= endRow; i++)
-    {
-      if(formatArray[i]===undefined)
-        formatArray[i] = [];
-			for(var k = col; k <= endCol; k++)
-			{
-        formatArray[i][k] = choice;
-        if(funcTracker[i*ht.countRows()+k]!==undefined)
+        choice = formatOption.DOLLARS;
+      else if(selection.indexOf("1.000")>=0)
+        choice = formatOption.THREE;
+      else if(selection.indexOf("1.00")>=0)
+        choice = formatOption.TWO;
+      else if(selection.indexOf("1.0")>=0)
+        choice = formatOption.ONE;
+      else if(selection.indexOf("1")>=0)
+        choice = formatOption.ZERO;
+      else if(selection.indexOf("No Format")>=0)
+        choice = formatOption.FNONE;
+      for(var i = row; i <= endRow; i++)
+      {
+        if(formatArray[i]===undefined)
+          formatArray[i] = [];
+        for(var k = col; k <= endCol; k++)
         {
+          formatArray[i][k] = choice;
+          if(funcTracker[i*ht.countRows()+k]!==undefined)
+          {
             ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+          }
         }
-	    }
-		}
-            }
-	}, div);
+      }
+    }
+}, div);
 }
 
 //Handles the cut operation
