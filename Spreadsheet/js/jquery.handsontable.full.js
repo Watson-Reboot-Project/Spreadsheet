@@ -10904,10 +10904,12 @@ function WalkontableEvent(instance) {
   //$(this.instance.wtTable.holder).on('mouseup', onMouseUp);
   $(this.instance.wtTable.holder).on('vmousedown', function(event)
   {
+    event.preventDefault();
     onMouseDown(event);
   });
   $(this.instance.wtTable.TABLE).on('vmouseover', function(event)
   {
+    event.preventDefault();
     onMouseOver(event);
   });
 /*  $(this.instance.wtTable.TABLE).on('mouseout', function(event)
@@ -10917,6 +10919,7 @@ function WalkontableEvent(instance) {
 */
   $(this.instance.wtTable.holder).on('vmouseup', function(event)
   {
+    event.preventDefault();
     onMouseUp(event);
   });
   //MITNOTEM

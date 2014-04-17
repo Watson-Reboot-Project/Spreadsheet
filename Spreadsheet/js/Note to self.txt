@@ -1,1 +1,0 @@
-You must iterate over [][].length and [][][].length

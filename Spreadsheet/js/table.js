@@ -48,7 +48,7 @@ formatOption = {
  });
 
 //global variables
-var prevSelect;
+var currSelect = [0,0,0,0];
 var funcTracker = new Array();
 var meditorManager;
 var currentEditor;
@@ -167,11 +167,11 @@ $(document).ready(function() {
 	//Listens for selection changing
 	$("#" + tableDiv.id).handsontable({
 		afterSelection: function(r, c, r2, c2) {
-      if(prevSelect!==undefined)
+      if(currSelect!==undefined)
       {
-        func = funcTracker[prevSelect[0]*ht.countRows()+prevSelect[1]];
+        func = funcTracker[currSelect[0]*ht.countRows()+currSelect[1]];
         if(func!==undefined)
-          ht.setDataAtCell(prevSelect[0], prevSelect[1], func.funcString);
+          ht.setDataAtCell(currSelect[0], currSelect[1], func.funcString);
       }
 			var selected = ht.getSelected();
       /*if(usedBy[selected[0]]!==undefined && usedBy[selected[0]][selected[1]]!==undefined)
@@ -293,8 +293,8 @@ $(document).ready(function() {
 	//Giving all clicks this functionality makes mobile easier to handle.
 	$('#' + tableDiv.id).on('click', function(evt) {
 		var selected = ht.getSelected();
-		console.log(selected);
-		if(selected[0]==selected[2]&&selected[1]==selected[3])
+		if(selected[0]==selected[2] && selected[1]==selected[3] &&
+		selected[0]==currSelect[0] && selected[1]==currSelect[1])
       meditorManager.openEditor();
 		var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
 		if(func!==undefined)
@@ -302,7 +302,7 @@ $(document).ready(function() {
       currentEditor.setValue(func.funcString);
     }
 		//Deprecated? Need to check during refactoring.
-		prevSelect = selected;
+		currSelect = selected;
 		/* obsolete with the introduction of function strings.
 		if(selected != undefined) {
 			var data = ht.getDataAtCell(selected[0], selected[1]);

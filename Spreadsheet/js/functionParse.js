@@ -28,7 +28,7 @@ function functionParse(functionString)
 {
 	var details = new parseDetails();
 	//Check if first character is equal. If so, parse function
-	if(functionString!==null && functionString.charAt(0)=='=')
+	if(functionString!==undefined && functionString!==null && functionString.charAt(0)=='=')
 	{
 		//if(functionString.indexOf("SUM")==1) //deprecated
 		if(false)

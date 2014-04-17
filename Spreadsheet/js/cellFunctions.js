@@ -110,6 +110,8 @@ function format()
 	}
 	var options = ["No Format", "1", "1.0", "1.00", "1.000", "$1.00"];
 	var choice;
+	var div = document.getElementById("selectorDiv1");
+	console.log(div);
 	new Selector().open("Format Number", options, function(selection)
 	{
     if(selection!==null)
@@ -140,7 +142,7 @@ function format()
 	    }
 		}
             }
-	});
+	}, div);
 }
 
 //Handles the cut operation
@@ -599,10 +601,11 @@ function fillTempCopy()
         countk = 0;
         for(var k = tempSelected[1]; k<=tempSelected[3]; k++)
         {
+            if(funcTracker[i*ht.countRows()+k]!==undefined)
             tempCopy[counti][countk] = funcTracker[i*ht.countRows()+k].funcString;
             //if the function string was undefined, set to empty string so
             //it will be treated as a string.
-            if(tempCopy[counti][countk]=== undefined)
+            else
                 tempCopy[counti][countk] = "";
             countk++;
         }
