@@ -3192,6 +3192,13 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
     this.openEditor = function (initialValue) {
       activeEditor.beginEditing(initialValue);
     };
+    
+    //MITCHELLSNOTE see beginEditingWithoutFocus
+    this.openEditorWithoutFocus = function(initialValue)
+    {
+      activeEditor.beginEditingWithoutFocus(initialValue);
+    };
+    //MITCHELLSNOTE
 
     this.closeEditor = function (restoreOriginalValue, ctrlDown, callback) {
 
@@ -4727,6 +4734,33 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
     this.instance.view.render(); //only rerender the selections (FillHandle should disappear when beginediting is triggered)
   };
+  
+  //MITCHELLSNOTE the editor is great at avoiding lag, but I'd like to have it
+  //open while still keeping the input box focused.
+  BaseEditor.prototype.beginEditingWithoutFocus = function(initialValue)
+  {
+    if (this.state != Handsontable.EditorState.VIRGIN) {
+      return;
+    }
+
+    if (this.cellProperties.readOnly) {
+      return;
+    }
+
+    this.instance.view.scrollViewport({row: this.row, col: this.col});
+    this.instance.view.render();
+
+    this.state = Handsontable.EditorState.EDITING;
+
+    initialValue = typeof initialValue == 'string' ? initialValue : this.originalValue;
+
+    this.setValue(Handsontable.helper.stringify(initialValue));
+
+    this.open();
+    this._opened = true;
+    this.instance.view.render(); //only rerender the selections (FillHandle should disappear when beginediting is triggered)
+  }
+  //MITCHELLSNOTE
 
   BaseEditor.prototype.finishEditing = function (restoreOriginalValue, ctrlDown, callback) {
 

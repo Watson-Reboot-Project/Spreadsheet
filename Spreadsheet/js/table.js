@@ -33,7 +33,11 @@ formatOption = {
  ib.bind('input', function(event)
  {
 	var selected = ht.getSelected();
-	ht.setDataAtCell(selected[0],selected[1], ib.val());
+	meditorManager.openEditorWithoutFocus();
+	currentEditor.setValue(ib.val());
+	currentEditor.refreshDimensions();
+	//obsolete after using the editor
+	//ht.setDataAtCell(selected[0],selected[1], ib.val());
  });
  
  ib.keypress(function(event)
@@ -43,7 +47,8 @@ formatOption = {
 		var selected = ht.getSelected();
 		var temp = ib.val();
 		pressEnter(event);
-		ht.setDataAtCell(selected[0],selected[1], temp);
+		//obsolete after updating cells on selection change
+		//ht.setDataAtCell(selected[0],selected[1], temp);
 	}
  });
 
@@ -198,7 +203,7 @@ $(document).ready(function() {
 
 	//Instructions before setting value into a cell.
 	$("#" + tableDiv.id).handsontable({
-		beforeSet: function(value)
+		beforeSet: function e(value)
 		{
       var selected = {};
       selected[0] =value.row;

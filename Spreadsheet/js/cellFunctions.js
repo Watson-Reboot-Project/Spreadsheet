@@ -168,6 +168,7 @@ function paste() {
 	if(debug && tempCopy!== undefined)
 	{
       var fillerArray = generateFillerArray(tempSelected, selected);
+      console.log(fillerArray);
       ht.populateFromArray(selected[0],selected[1], fillerArray, selected[0]+fillerArray.length-1, selected[1]+fillerArray[0].length-1);
 	}
 	else if(tempCopy != undefined && selected != undefined) {
@@ -701,6 +702,7 @@ function generateFillerArray(copySelection, pasteSelection)
        for(var i = copySelection[0]; i<=copySelection[2]; i++)
        {
           fillerArray[counti] = [];
+          countk = 0;
           for(var k = copySelection[1]; k<=copySelection[3]; k++)
           {
               fillerArray[counti][countk] = modifiedFunctionString(i, k, pasteSelection[0]+counti, pasteSelection[1]+countk, tempCopy[counti][countk]);
@@ -716,9 +718,10 @@ function generateFillerArray(copySelection, pasteSelection)
 //appropriate function string.
 function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldFS)
 {
+    console.log(oldFS);
     //an equal sign means that the function string is attempting to be
     //a valid expression, so cell references must be parsed.
-    if(oldFS.indexOf("=")==0)
+    if(oldFS!==undefined && oldFS.indexOf("=")==0)
     {
       //calculate differences
       var rowDif = pasteRow-initialRow;
@@ -776,6 +779,6 @@ function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldF
         regex = oldFS.match(nonabsolute);
       }
       oldFS = oldFS.replace(/~/g, '');
-      return oldFS;
     }
+    return oldFS;
 }
