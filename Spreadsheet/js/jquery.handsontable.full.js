@@ -1,3 +1,5 @@
+//NOTE TO SELF: onMouseDown, onMouseOver etc. Check line 10930ish
+
 /**
  * Handsontable 0.10.3
  * Handsontable is a simple jQuery plugin for editable tables with basic copy-paste compatibility with Excel and Google Docs
@@ -8,6 +10,12 @@
  *
  * Date: Mon Feb 10 2014 14:15:11 GMT+0100 (CET)
  */
+ /**
+  * Note by Mitchell James Martin: this program has been slightly edited for
+  * mobile input events and reporting of editors. I've enclosed sections I've edited
+  * with MITCHELLSNOTE comments.
+  * MITNOTEM refers to my notes about mobile development
+  */
 /*jslint white: true, browser: true, plusplus: true, indent: 4, maxerr: 50 */
 
 var Handsontable = { //class namespace
@@ -979,6 +987,10 @@ Handsontable.Core = function (rootElement, userSettings) {
 
     this.view = new Handsontable.TableView(this);
     editorManager = new Handsontable.EditorManager(instance, priv, selection, datamap);
+    //MITCHELLSNOTE
+    //jquery does not allow access to the editor manager normally,
+    //but I would very much like to have it.
+    meditorManager = editorManager;
 
     this.updateSettings(priv.settings, true);
     this.parseSettingsFromDOM();
@@ -2413,6 +2425,7 @@ Handsontable.TableView = function (instance) {
   instance.$table = $(table);
   instance.rootElement.prepend(instance.$table);
 
+  //MITNOTEM: this mousedown and keyup shouldn't change on mobile.
   instance.rootElement.on('mousedown.handsontable', function (event) {
     if (!that.isTextSelectionAllowed(event.target)) {
       clearTextSelection();
@@ -2888,7 +2901,6 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
     var init = function () {
 
       function onKeyDown(event) {
-
         if (!instance.isListening()) {
           return;
         }
@@ -3072,11 +3084,11 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
       }
       $document.on('keydown.handsontable.' + instance.guid, onKeyDown);
 
+      //MITMNOTE: not sure if mobile has a double click.
       function onDblClick() {
 //        that.instance.destroyEditor();
         that.openEditor();
       }
-
       instance.view.wt.update('onCellDblClick', onDblClick);
 
       instance.addHook('afterDestroy', function(){
@@ -3180,6 +3192,13 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
     this.openEditor = function (initialValue) {
       activeEditor.beginEditing(initialValue);
     };
+    
+    //MITCHELLSNOTE see beginEditingWithoutFocus
+    this.openEditorWithoutFocus = function(initialValue)
+    {
+      activeEditor.beginEditingWithoutFocus(initialValue);
+    };
+    //MITCHELLSNOTE
 
     this.closeEditor = function (restoreOriginalValue, ctrlDown, callback) {
 
@@ -4647,7 +4666,8 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
     throw Error('Editor close() method unimplemented');
   };
 
-  BaseEditor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
+  BaseEditor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties)
+	{
     this.TD = td;
     this.row = row;
     this.col = col;
@@ -4656,6 +4676,9 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
     this.cellProperties = cellProperties;
 
     this.state = Handsontable.EditorState.VIRGIN;
+	//MITCHELLSNOTE
+	currentEditor = this;
+	//MITCHELLSNOTE
   };
 
   BaseEditor.prototype.extend = function(){
@@ -4711,6 +4734,33 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
     this.instance.view.render(); //only rerender the selections (FillHandle should disappear when beginediting is triggered)
   };
+  
+  //MITCHELLSNOTE the editor is great at avoiding lag, but I'd like to have it
+  //open while still keeping the input box focused.
+  BaseEditor.prototype.beginEditingWithoutFocus = function(initialValue)
+  {
+    if (this.state != Handsontable.EditorState.VIRGIN) {
+      return;
+    }
+
+    if (this.cellProperties.readOnly) {
+      return;
+    }
+
+    this.instance.view.scrollViewport({row: this.row, col: this.col});
+    this.instance.view.render();
+
+    this.state = Handsontable.EditorState.EDITING;
+
+    initialValue = typeof initialValue == 'string' ? initialValue : this.originalValue;
+
+    this.setValue(Handsontable.helper.stringify(initialValue));
+
+    this.open();
+    this._opened = true;
+    this.instance.view.render(); //only rerender the selections (FillHandle should disappear when beginediting is triggered)
+  }
+  //MITCHELLSNOTE
 
   BaseEditor.prototype.finishEditing = function (restoreOriginalValue, ctrlDown, callback) {
 
@@ -9285,7 +9335,6 @@ DragToScroll.prototype.check = function (x, y) {
     //x is more than right
     diffX = x - this.boundaries.right;
   }
-
   this.callback(diffX, diffY);
 };
 
@@ -10809,7 +10858,6 @@ function WalkontableEvent(instance) {
 
   var onMouseDown = function (event) {
     var cell = that.parentCell(event.target);
-
     if (that.wtDom.hasClass(event.target, 'corner')) {
       that.instance.getSetting('onCellCornerMouseDown', event, event.target);
     }
@@ -10835,6 +10883,9 @@ function WalkontableEvent(instance) {
     if (that.instance.hasSetting('onCellMouseOver')) {
       var TABLE = that.instance.wtTable.TABLE;
       var TD = that.wtDom.closest(event.target, ['TD', 'TH'], TABLE);
+      console.log(event.toElement.cellIndex);
+      //console.log(that.wtDom.isChildOf(TD, TABLE));
+      //MitchellsNoteM: probably going to need to add this back for performance.
       if (TD && TD !== lastMouseOver && that.wtDom.isChildOf(TD, TABLE)) {
         lastMouseOver = TD;
         if (TD.nodeName === 'TD') {
@@ -10883,10 +10934,42 @@ function WalkontableEvent(instance) {
     }
   };
 
-  $(this.instance.wtTable.holder).on('mousedown', onMouseDown);
-  $(this.instance.wtTable.TABLE).on('mouseover', onMouseOver);
-//  $(this.instance.wtTable.TABLE).on('mouseout', onMouseOut);
-  $(this.instance.wtTable.holder).on('mouseup', onMouseUp);
+  //MITNOTEM replaced normal event triggers with v-events. IE: mobile jquery events.
+  //$(this.instance.wtTable.holder).on('mousedown', onMouseDown);
+  //$(this.instance.wtTable.TABLE).on('mouseover', onMouseOver);
+//DISABLED IN BASE HANDSONTABLE  $(this.instance.wtTable.TABLE).on('mouseout', onMouseOut);
+  //$(this.instance.wtTable.holder).on('mouseup', onMouseUp);
+  $(this.instance.wtTable.holder).on('vmousedown', function(event)
+  {
+    event.preventDefault();
+    onMouseDown(event);
+  });
+  /*$(this.instance.wtTable.TABLE).on('vmouseover', function(event)
+  {
+    event.preventDefault();
+    onMouseOver(event);
+  });*/
+  $(this.instance.wtTable.TABLE).on('vmousemove', function(event)
+  {
+    $('.catch').each(function() 
+    {
+      console.log($(".catch"));
+      console.log($(this));
+    });
+    event.preventDefault();
+    onMouseOver(event);
+  });
+/*  $(this.instance.wtTable.TABLE).on('mouseout', function(event)
+  {
+    event.preventDefault();
+  });
+*/
+  $(this.instance.wtTable.holder).on('vmouseup', function(event)
+  {
+    event.preventDefault();
+    onMouseUp(event);
+  });
+  //MITNOTEM
 }
 
 WalkontableEvent.prototype.parentCell = function (elem) {
