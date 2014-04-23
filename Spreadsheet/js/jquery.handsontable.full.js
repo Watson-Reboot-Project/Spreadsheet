@@ -10883,6 +10883,9 @@ function WalkontableEvent(instance) {
     if (that.instance.hasSetting('onCellMouseOver')) {
       var TABLE = that.instance.wtTable.TABLE;
       var TD = that.wtDom.closest(event.target, ['TD', 'TH'], TABLE);
+      console.log(event.toElement.cellIndex);
+      //console.log(that.wtDom.isChildOf(TD, TABLE));
+      //MitchellsNoteM: probably going to need to add this back for performance.
       if (TD && TD !== lastMouseOver && that.wtDom.isChildOf(TD, TABLE)) {
         lastMouseOver = TD;
         if (TD.nodeName === 'TD') {
@@ -10941,8 +10944,18 @@ function WalkontableEvent(instance) {
     event.preventDefault();
     onMouseDown(event);
   });
-  $(this.instance.wtTable.TABLE).on('vmouseover', function(event)
+  /*$(this.instance.wtTable.TABLE).on('vmouseover', function(event)
   {
+    event.preventDefault();
+    onMouseOver(event);
+  });*/
+  $(this.instance.wtTable.TABLE).on('vmousemove', function(event)
+  {
+    $('.catch').each(function() 
+    {
+      console.log($(".catch"));
+      console.log($(this));
+    });
     event.preventDefault();
     onMouseOver(event);
   });

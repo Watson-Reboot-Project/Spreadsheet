@@ -168,7 +168,6 @@ function paste() {
 	if(debug && tempCopy!== undefined)
 	{
       var fillerArray = generateFillerArray(tempSelected, selected);
-      console.log(fillerArray);
       ht.populateFromArray(selected[0],selected[1], fillerArray, selected[0]+fillerArray.length-1, selected[1]+fillerArray[0].length-1);
 	}
 	else if(tempCopy != undefined && selected != undefined) {
@@ -233,6 +232,28 @@ function cellFunction(row, col, funcString) {
 	this.funcString = funcString;
 }
 
+function setUpdateTable(row, col)
+{
+  updateTable[ht.countRows()*row+col] = false;
+  if(usedBy[row]!==undefined && usedBy[row][col]!==undefined)
+  {
+    for(var i = 0; i<=usedBy[row][col].length; i++)
+    {
+      if(usedBy[row][col][i]!==undefined)
+      {
+        for(var k = 0; k<=usedBy[row][col][i].length; k++)
+        {
+          //only update if the value is not exactly false.
+          //if the value is false, then we've got a recursive statement.
+          //if the value is undefined, se it.
+          if(updateTable[ht.countRows()*i+k]!==false)
+            setUpdateTable(i, k);
+        }
+      }
+    }
+  }
+}
+
 //takes coordinates for a selection and a specified cell, and marks all
 //cells within the range specified in details as used by cell
 function updateDependencyArrays(row, col, endRow, endCol, cellRow, cellCol)
@@ -282,14 +303,23 @@ function notifyDependants(row, col)
   //Cycle through cells and search for dependant cells.
   if(usedBy[row]!== undefined && usedBy[row][col]!==undefined)
   {
-    for(var i=0; i<usedBy[row][col].length; i++)
+    for(var i=0; i<=usedBy[row][col].length; i++)
     {
       if(usedBy[row][col][i]!==undefined)
       {
-        for(var k=0; k<usedBy[row][col][i].length; k++)
+        for(var k=0; k<=usedBy[row][col][i].length; k++)
         {
-          //when a dependant cell is found, update it.
-          if(usedBy[row][col][i][k])
+          //if updateTable[index] is true then the cell is completely up-to-date.
+          //if false then update it.
+          //if it is null, then there is a circular reference.
+          if(debug && usedBy[row][col][i][k] && updateTable[i*ht.countRows()+k]!==null)
+          {
+            updateTable[i*ht.countRows()+k] = null;
+            if(usedBy[i]===undefined || usedBy[i][k]===undefined ||
+            usedBy[i][k][row]===undefined || !usedBy[i][k][row][col])
+              ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+          }
+          else if(usedBy[row][col][i][k] && !debug)
           {
             if(usedBy[i]===undefined || usedBy[i][k]===undefined ||
             usedBy[i][k][row]===undefined || !usedBy[i][k][row][col])
@@ -431,6 +461,36 @@ function evaluateTableExpression(expression, selectedCell)
         cellNames = SUMAVG[0].substr(SUMAVG[0].indexOf(":")).match(cellRE);
         var cellRow2 = getRowFromNumber(cellNames[0].substr(1));
         var cellCol2 = getColFromChar(cellNames[0].charAt(0));
+        //before performing the final sum, loop through the sum/average
+        //range and update cells that are not updated already.
+        if(debug)
+        {
+            var temp;
+            if(cellRow>cellRow2)
+            {
+                temp = cellRow;
+                cellRow = cellRow2;
+                cellRow2 = temp;
+            }
+            if(cellCol>cellCol2)
+            {
+                temp = cellCol;
+                cellCol = cellCol2;
+                cellCol2 = temp;
+            }
+            for(var i = cellRow; i<=cellRow2; i++)
+            {
+              for(var k = cellCol; k<=cellCol2; k++)
+              {
+                if(updateTable[i*ht.countRows()+k]===false)
+                {
+                  updateTable[i*ht.countRows()+k] = null;
+                  ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+                }
+                
+              }
+            }
+        }
         var details = {};
         details.row = cellRow;
         details.col = cellCol;
@@ -487,6 +547,14 @@ function evaluateTableExpression(expression, selectedCell)
           //failed) but cannot do so within a block. Thus, the default behavior
           //is to set cellNames to null and define it if there are no errors.
           cellGet = false;
+          if(debug)
+          {
+            if(updateTable[cellRow*ht.countRows()+cellCol]===false)
+                {
+                  updateTable[cellRow*ht.countRows()+cellCol] = null;
+                  ht.setDataAtCell(cellRow, cellCol, funcTracker[cellRow*ht.countRows()+cellCol].funcString);
+                }
+          }
           //circular dependancy
           if(dependantOn[cellRow]!==undefined && dependantOn[cellRow][cellCol]!==undefined && 
           dependantOn[cellRow][cellCol][selected[0]]!==undefined &&

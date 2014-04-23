@@ -8,7 +8,9 @@
  //box in here too. Input/function boxes are an integral part of spreadsheet
  //programs, and they are heavily intertwined.
  var ib = $("#"+functionBox.id);
- 
+ //for performance purposes, tracks when user has made input so that
+ //certain update functions can be skipped.
+ var recentChanges = false; 
  //Creates a 4-dimensional table which stores data for which other cells use a certain cell.
  //The way this is used is that the first two dimensions locate the cell which is depended on.
  //The second two dimensions are for the dependant cells.
@@ -20,6 +22,11 @@ var dependantOn =[];
 //Note: for all dependencies, undefined is equivalent to false.
 //stores data for format
 var formatArray =[];
+//This keeps track of which cells are fully updated after changing the value of a cell on which
+//others are dependant
+var updateTable = [];
+//keeps track of whether cells are updating and which cell initiated the update cycle
+var updateState = [false, 0, 0];
 //enumerator for the six types of string formatting
 formatOption = {
   ZERO:0,
@@ -32,6 +39,7 @@ formatOption = {
  
  ib.bind('input', function(event)
  {
+  recentChanges = true;
 	var selected = ht.getSelected();
 	meditorManager.openEditorWithoutFocus();
 	currentEditor.setValue(ib.val());
@@ -109,6 +117,12 @@ $(document).ready(function() {
 				}*/
 			//After a cell is changed, it needs to notify any cell that depends on it.
 			notifyDependants(changes[0][0], changes[0][1]);
+			if(debug && updateState[0] && updateState[1] == changes[0][0] && updateState[2] == changes[0][1])
+			{
+        updateState[0] = false;
+			}
+			else if(debug)
+        updateTable[changes[0][0]*ht.countRows()+changes[0][1]] = true;
 			if(isFunction)
         changeInput(func.funcString);
 			if(!isFunction)
@@ -121,6 +135,7 @@ $(document).ready(function() {
 	//Mitchell's note- also looking for backspace and delete
 	$("#" + tableDiv.id).handsontable({
 		beforeKeyDown: function(event) {
+      recentChanges = true;
       //enter key
 			if(event.which == 13) {
 				pressEnter(event)
@@ -171,12 +186,14 @@ $(document).ready(function() {
 	
 	//Listens for selection changing
 	$("#" + tableDiv.id).handsontable({
-		afterSelection: function(r, c, r2, c2) {
-      if(currSelect!==undefined)
+		afterSelection: function(r, c, r2, c2) 
+		{
+      if(ib.recentlyChanged)
       {
         func = funcTracker[currSelect[0]*ht.countRows()+currSelect[1]];
         if(func!==undefined)
           ht.setDataAtCell(currSelect[0], currSelect[1], func.funcString);
+        ib.recentlyChanged = false;
       }
 			var selected = ht.getSelected();
       /*if(usedBy[selected[0]]!==undefined && usedBy[selected[0]][selected[1]]!==undefined)
@@ -194,11 +211,11 @@ $(document).ready(function() {
 					break;
 				}
 			}*/
-			if(isFunction)
-        changeInput(func.funcString);
-			else
-        changeInput(ht.getDataAtCell(selected[0], selected[1]));
-		}
+        if(isFunction)
+          changeInput(func.funcString);
+        else
+          changeInput(ht.getDataAtCell(selected[0], selected[1]));
+    }
 	});
 
 	//Instructions before setting value into a cell.
@@ -209,6 +226,28 @@ $(document).ready(function() {
       selected[0] =value.row;
       selected[1] = value.prop;
       selected[2] = value.value;
+      //this is the original cell that causes updates.
+      if(debug && !updateState[0])
+      {
+        updateTable[selected[0]*ht.countRows()+selected[1]] = true;
+        if(usedBy[selected[0]]!==undefined && usedBy[selected[0]][selected[1]]!==undefined)
+        {
+        for(var i = 0; i<=usedBy[selected[0]][selected[1]].length; i++)
+         {
+          if(usedBy[selected[0]][selected[1]][i]!==undefined)
+          {
+              for(var k = 0; k<=usedBy[selected[0]][selected[1]][i].length; k++)
+              {
+                if(usedBy[selected[0]][selected[1]][i][k])
+                    setUpdateTable(i,k);
+              }
+          }
+         }
+        }
+        updateState[0] = true;
+        updateState[1] = selected[0];
+        updateState[2] = selected[1];
+      }
       fillFuncTracker(selected);
       var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
       func.funcString = value.value;
@@ -298,11 +337,11 @@ $(document).ready(function() {
 	//Giving all clicks this functionality makes mobile easier to handle.
 	$('#' + tableDiv.id).on('click', function(evt) {
 		var selected = ht.getSelected();
-		if(selected[0]==selected[2] && selected[1]==selected[3] &&
+		if(currSelect!==undefined && selected[0]==selected[2] && selected[1]==selected[3] &&
 		selected[0]==currSelect[0] && selected[1]==currSelect[1])
       meditorManager.openEditor();
 		var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-		if(func!==undefined)
+		if(func!==undefined && !currentEditor.isOpened())
 		{
       currentEditor.setValue(func.funcString);
     }
