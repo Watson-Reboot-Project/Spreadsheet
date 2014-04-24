@@ -786,7 +786,6 @@ function generateFillerArray(copySelection, pasteSelection)
 //appropriate function string.
 function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldFS)
 {
-    console.log(oldFS);
     //an equal sign means that the function string is attempting to be
     //a valid expression, so cell references must be parsed.
     if(oldFS!==undefined && oldFS.indexOf("=")==0)
