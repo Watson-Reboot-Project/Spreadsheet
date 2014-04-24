@@ -647,7 +647,7 @@ function Selector() {
 	var dialogHTML =
 		'<table id="selectorTable">\
 		<tr>\
-		<td style="width:200px;"><ol id="selector' + thisID + '" class="WatsonSelector" style="overflow-y: scroll; height: 100px;"> </ol></td>\
+		<td style="width:200px;"><ol id="selector' + thisID + '" class="WatsonSelector" style="overflow-y: scroll; height: 150px;"> </ol></td>\
 		<td>\
 		<table id="innerTable">\
 		<tr>\

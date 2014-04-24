@@ -110,7 +110,7 @@ function format()
 	}
 	var options = ["No Format", "1", "1.0", "1.00", "1.000", "$1.00"];
 	var choice;
-	var div = document.getElementById("selectorDiv1");
+	var div = document.getElementById("container");
 	var sel = new Selector();
 	sel.open("Format Number", options, function(selection)
 {
