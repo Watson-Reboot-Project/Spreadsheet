@@ -32,7 +32,7 @@ var functionBox = document.createElement('input');
 functionBox.id = "functionBox" + figNum;
 functionBox.type = "text";
 functionBox.name = "Functions";
-functionBox.className = "input-group col-xs-11";
+functionBox.className = "input-group col-xs-9";
 
 // moves bootstrap to next row
 var cfDiv = document.createElement('div');
