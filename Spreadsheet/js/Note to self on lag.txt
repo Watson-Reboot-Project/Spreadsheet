@@ -1,1 +1,0 @@
-Profiler seems to show that the command PressEnter() takes a long time to resolve. Specifically, the call to selectCell within pressEnter()
