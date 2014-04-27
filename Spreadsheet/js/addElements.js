@@ -21,7 +21,7 @@ row_1.className = "row";
 
 //Div to restrict with of spreadsheet
 var tableHolder = document.createElement('div');
-tableHolder.className = "col-xs-9";
+tableHolder.className = "col-md-10 col-xs-10";
 
 //Spreadsheet div
 var tableDiv = document.createElement('div');
@@ -30,14 +30,18 @@ tableDiv.id = "table" + figNum;
 //input for cell functions
 var functionBox = document.createElement('input');
 functionBox.id = "functionBox" + figNum;
-functionBox.style.width = "100%";
 functionBox.type = "text";
 functionBox.name = "Functions";
+functionBox.className = "input-group col-xs-9";
+
+// moves bootstrap to next row
+var cfDiv = document.createElement('div');
+cfDiv.className = "clearfix";
 
 //Div for buttons
 var buttonDiv = document.createElement('div');
 buttonDiv.id = 'buttonDiv' + figNum;
-buttonDiv.className = "btn-group-vertical col-xs-3";
+buttonDiv.className = "btn-group-vertical col-xs-2";
 
 //Buttons
 var cutButton = document.createElement('button');
