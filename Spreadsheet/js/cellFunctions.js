@@ -439,7 +439,9 @@ function evaluateTableExpression(expression, selectedCell)
       selected[0] = selectedCell.row;
       selected[1] = selectedCell.col;
       //ignore dollar signs
-      expression.replace(/\$/g,'');
+      expression = expression.replace(/\$/g,'');
+      expression = expression.replace(/ /g,'');
+      expression = expression.toUpperCase();
       var SUMAVG = expression.match(SUMAVGRE);
       var saGet = false;
       if(SUMAVG!==null)
@@ -774,6 +776,7 @@ function generateFillerArray(copySelection, pasteSelection)
           counti++;
        }
     }
+    console.log(fillerArray);
     return fillerArray;
 }
 
@@ -785,6 +788,8 @@ function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldF
     //a valid expression, so cell references must be parsed.
     if(oldFS!==undefined && oldFS.indexOf("=")==0)
     {
+      oldFS = oldFS.replace(/ /g,'');
+      oldFS = oldFS.toUpperCase();
       //calculate differences
       var rowDif = pasteRow-initialRow;
       var colDif = pasteCol-initialCol;
@@ -842,5 +847,6 @@ function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldF
       }
       oldFS = oldFS.replace(/~/g, '');
     }
+    console.log(oldFS);
     return oldFS;
 }

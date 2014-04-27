@@ -341,7 +341,7 @@ $(document).ready(function() {
 		selected[0]==currSelect[0] && selected[1]==currSelect[1])
       meditorManager.openEditor();
 		var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-		if(func!==undefined && !currentEditor.isOpened())
+		if(func!==undefined)
 		{
       currentEditor.setValue(func.funcString);
     }

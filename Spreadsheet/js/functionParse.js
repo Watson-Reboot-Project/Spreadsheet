@@ -46,6 +46,7 @@ function functionParse(functionString)
       var substitute = functionString.substr(1);
       substitute = substitute.replace(/ /g,'');
       substitute = substitute.replace(/\$/g,'');
+      substitute = substitute.toUpperCase();
 			//always attempt to evaluate as expressions in the most up-to-date builds.
 			substitute = substituteParenthesis(substitute);
 			if(expressionRE.test(substitute))
