@@ -22,7 +22,6 @@ row_1.className = "row";
 //Div to restrict with of spreadsheet
 var tableHolder = document.createElement('div');
 tableHolder.className = "col-md-8 col-xs-9 tableHolder";
-console.log(tableHolder);
 tableHolder.style = "overflow: hidden";
 //Spreadsheet div
 var tableDiv = document.createElement('div');
