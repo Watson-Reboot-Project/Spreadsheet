@@ -117,11 +117,11 @@ $(document).ready(function() {
 				}*/
 			//After a cell is changed, it needs to notify any cell that depends on it.
 			notifyDependants(changes[0][0], changes[0][1]);
-			if(debug && updateState[0] && updateState[1] == changes[0][0] && updateState[2] == changes[0][1])
+			if(updateState[0] && updateState[1] == changes[0][0] && updateState[2] == changes[0][1])
 			{
         updateState[0] = false;
 			}
-			else if(debug)
+			else
         updateTable[changes[0][0]*ht.countRows()+changes[0][1]] = true;
 			if(isFunction)
         changeInput(func.funcString);
@@ -227,7 +227,7 @@ $(document).ready(function() {
       selected[1] = value.prop;
       selected[2] = value.value;
       //this is the original cell that causes updates.
-      if(debug && !updateState[0])
+      if(!updateState[0])
       {
         updateTable[selected[0]*ht.countRows()+selected[1]] = true;
         if(usedBy[selected[0]]!==undefined && usedBy[selected[0]][selected[1]]!==undefined)
@@ -334,14 +334,16 @@ $(document).ready(function() {
 	
 	//Listens for double click MITCHELL'S NOTE
 	//Editor works just as well as typing into the cell itself.
-	//Giving all clicks this functionality makes mobile easier to handle.
-	$('#' + tableDiv.id).on('click', function(evt) {
+	//Giving all clicks with cells as the target makes mobile easier to handle.
+	//$('#' + tableDiv.id).on('click', function(evt) {
+    $('td').click(function(evt) {
+    console.log($('#' + tableDiv.id));
 		var selected = ht.getSelected();
 		if(currSelect!==undefined && selected[0]==selected[2] && selected[1]==selected[3] &&
 		selected[0]==currSelect[0] && selected[1]==currSelect[1])
       meditorManager.openEditor();
 		var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-		if(func!==undefined && !currentEditor.isOpened())
+		if(func!==undefined)
 		{
       currentEditor.setValue(func.funcString);
     }
@@ -353,7 +355,6 @@ $(document).ready(function() {
 			if(data != null) changeInput(data);
 		}*/
 	});
-	
 });
 
 //Handles functionality of whenever the enter key is pressed. This should be the
@@ -372,6 +373,7 @@ function pressEnter(event)
 		event.stopImmediatePropagation();
 		ht.selectCell(selected[0]-1, selected[1], selected[0]-1, selected[1], true);
 	}
+	currSelect = ht.getSelected();
 }
 
 function fillFuncTracker(selected)

@@ -110,7 +110,7 @@ function format()
 	}
 	var options = ["No Format", "1", "1.0", "1.00", "1.000", "$1.00"];
 	var choice;
-	var div = document.getElementById("selectorDiv1");
+	var div = document.getElementById("container");
 	var sel = new Selector();
 	sel.open("Format Number", options, function(selection)
 {
@@ -165,7 +165,7 @@ function copy()
 //Handles the paste operation
 function paste() {
 	var selected = ht.getSelected();
-	if(debug && tempCopy!== undefined)
+	if(tempCopy!== undefined)
 	{
       var fillerArray = generateFillerArray(tempSelected, selected);
       ht.populateFromArray(selected[0],selected[1], fillerArray, selected[0]+fillerArray.length-1, selected[1]+fillerArray[0].length-1);
@@ -312,19 +312,20 @@ function notifyDependants(row, col)
           //if updateTable[index] is true then the cell is completely up-to-date.
           //if false then update it.
           //if it is null, then there is a circular reference.
-          if(debug && usedBy[row][col][i][k] && updateTable[i*ht.countRows()+k]!==null)
+          if(usedBy[row][col][i][k] && updateTable[i*ht.countRows()+k]!==null)
           {
             updateTable[i*ht.countRows()+k] = null;
             if(usedBy[i]===undefined || usedBy[i][k]===undefined ||
             usedBy[i][k][row]===undefined || !usedBy[i][k][row][col])
               ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
           }
-          else if(usedBy[row][col][i][k] && !debug)
+          //outdated after the introduction of updated cell tracking
+          /*else if(usedBy[row][col][i][k] && !debug)
           {
             if(usedBy[i]===undefined || usedBy[i][k]===undefined ||
             usedBy[i][k][row]===undefined || !usedBy[i][k][row][col])
               ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
-          }
+          }*/
         }
       }
     }
@@ -438,7 +439,9 @@ function evaluateTableExpression(expression, selectedCell)
       selected[0] = selectedCell.row;
       selected[1] = selectedCell.col;
       //ignore dollar signs
-      expression.replace(/\$/g,'');
+      expression = expression.replace(/\$/g,'');
+      expression = expression.replace(/ /g,'');
+      expression = expression.toUpperCase();
       var SUMAVG = expression.match(SUMAVGRE);
       var saGet = false;
       if(SUMAVG!==null)
@@ -463,33 +466,30 @@ function evaluateTableExpression(expression, selectedCell)
         var cellCol2 = getColFromChar(cellNames[0].charAt(0));
         //before performing the final sum, loop through the sum/average
         //range and update cells that are not updated already.
-        if(debug)
+        var temp;
+        if(cellRow>cellRow2)
         {
-            var temp;
-            if(cellRow>cellRow2)
+            temp = cellRow;
+            cellRow = cellRow2;
+            cellRow2 = temp;
+        }
+        if(cellCol>cellCol2)
+        {
+            temp = cellCol;
+            cellCol = cellCol2;
+            cellCol2 = temp;
+        }
+        for(var i = cellRow; i<=cellRow2; i++)
+        {
+          for(var k = cellCol; k<=cellCol2; k++)
+          {
+            if(updateTable[i*ht.countRows()+k]===false)
             {
-                temp = cellRow;
-                cellRow = cellRow2;
-                cellRow2 = temp;
+              updateTable[i*ht.countRows()+k] = null;
+              ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
             }
-            if(cellCol>cellCol2)
-            {
-                temp = cellCol;
-                cellCol = cellCol2;
-                cellCol2 = temp;
-            }
-            for(var i = cellRow; i<=cellRow2; i++)
-            {
-              for(var k = cellCol; k<=cellCol2; k++)
-              {
-                if(updateTable[i*ht.countRows()+k]===false)
-                {
-                  updateTable[i*ht.countRows()+k] = null;
-                  ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
-                }
-                
-              }
-            }
+            
+          }
         }
         var details = {};
         details.row = cellRow;
@@ -547,13 +547,10 @@ function evaluateTableExpression(expression, selectedCell)
           //failed) but cannot do so within a block. Thus, the default behavior
           //is to set cellNames to null and define it if there are no errors.
           cellGet = false;
-          if(debug)
+          if(updateTable[cellRow*ht.countRows()+cellCol]===false)
           {
-            if(updateTable[cellRow*ht.countRows()+cellCol]===false)
-                {
-                  updateTable[cellRow*ht.countRows()+cellCol] = null;
-                  ht.setDataAtCell(cellRow, cellCol, funcTracker[cellRow*ht.countRows()+cellCol].funcString);
-                }
+                updateTable[cellRow*ht.countRows()+cellCol] = null;
+                ht.setDataAtCell(cellRow, cellCol, funcTracker[cellRow*ht.countRows()+cellCol].funcString);
           }
           //circular dependancy
           if(dependantOn[cellRow]!==undefined && dependantOn[cellRow][cellCol]!==undefined && 
@@ -779,6 +776,7 @@ function generateFillerArray(copySelection, pasteSelection)
           counti++;
        }
     }
+    console.log(fillerArray);
     return fillerArray;
 }
 
@@ -786,11 +784,12 @@ function generateFillerArray(copySelection, pasteSelection)
 //appropriate function string.
 function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldFS)
 {
-    console.log(oldFS);
     //an equal sign means that the function string is attempting to be
     //a valid expression, so cell references must be parsed.
     if(oldFS!==undefined && oldFS.indexOf("=")==0)
     {
+      oldFS = oldFS.replace(/ /g,'');
+      oldFS = oldFS.toUpperCase();
       //calculate differences
       var rowDif = pasteRow-initialRow;
       var colDif = pasteCol-initialCol;
@@ -848,5 +847,6 @@ function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldF
       }
       oldFS = oldFS.replace(/~/g, '');
     }
+    console.log(oldFS);
     return oldFS;
 }

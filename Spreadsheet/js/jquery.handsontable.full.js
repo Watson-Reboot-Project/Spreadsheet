@@ -10883,7 +10883,6 @@ function WalkontableEvent(instance) {
     if (that.instance.hasSetting('onCellMouseOver')) {
       var TABLE = that.instance.wtTable.TABLE;
       var TD = that.wtDom.closest(event.target, ['TD', 'TH'], TABLE);
-      console.log(event.toElement.cellIndex);
       //console.log(that.wtDom.isChildOf(TD, TABLE));
       //MitchellsNoteM: probably going to need to add this back for performance.
       if (TD && TD !== lastMouseOver && that.wtDom.isChildOf(TD, TABLE)) {
@@ -10951,11 +10950,7 @@ function WalkontableEvent(instance) {
   });*/
   $(this.instance.wtTable.TABLE).on('vmousemove', function(event)
   {
-    $('.catch').each(function() 
-    {
-      console.log($(".catch"));
-      console.log($(this));
-    });
+    event.target = document.elementFromPoint(event.clientX, event.clientY);
     event.preventDefault();
     onMouseOver(event);
   });
@@ -11391,7 +11386,7 @@ WalkontableScrollbar.prototype.init = function () {
   this.sliderStyle.position = 'absolute';
   this.sliderStyle.top = '0';
   this.sliderStyle.left = '0';
-  this.sliderStyle.display = 'none';
+  //this.sliderStyle.display = 'none';
   this.slider.className = 'dragdealer ' + this.type;
 
   this.handle = document.createElement('DIV');
@@ -11413,7 +11408,7 @@ WalkontableScrollbar.prototype.init = function () {
     vertical: (this.type === 'vertical'),
     horizontal: (this.type === 'horizontal'),
     slide: false,
-    speed: 100,
+    speed: 200,
     animationCallback: function (x, y) {
       if (firstRun) {
         firstRun = false;
@@ -11524,10 +11519,11 @@ WalkontableScrollbar.prototype.refresh = function () {
     }
 
     sliderSize = tableHeight - 2; //2 is sliders border-width
-
+    this.sliderStyle.float = "right";
     this.sliderStyle.top = this.instance.wtDom.offset(this.$table[0]).top - this.instance.wtDom.offset(this.container).top + 'px';
-    this.sliderStyle.left = tableWidth - 1 + 'px'; //1 is sliders border-width
+    this.sliderStyle.left = $(".htcore")[0].offsetWidth + 'px'; //1 is sliders border-width
     this.sliderStyle.height = Math.max(sliderSize, 0) + 'px';
+    this.sliderStyle.width = "32px";
   }
   else { //horizontal
     sliderSize = tableWidth - 2; //2 is sliders border-width
@@ -11535,10 +11531,10 @@ WalkontableScrollbar.prototype.refresh = function () {
     this.sliderStyle.left = this.instance.wtDom.offset(this.$table[0]).left - this.instance.wtDom.offset(this.container).left + 'px';
     this.sliderStyle.top = tableHeight - 1 + 'px'; //1 is sliders border-width
     this.sliderStyle.width = Math.max(sliderSize, 0) + 'px';
+    this.sliderStyle.height = "32px";
   }
-
   ratio = this.getHandleSizeRatio(visibleCount, this.total);
-  handleSize = Math.round(sliderSize * ratio);
+  handleSize = Math.round(sliderSize * ratio)*2;
   if (handleSize < 10) {
     handleSize = 15;
   }
@@ -11550,22 +11546,24 @@ WalkontableScrollbar.prototype.refresh = function () {
 
   if (this.type === 'vertical') {
     this.handleStyle.height = handleSize + 'px';
+    this.handleStyle.width = "32px";
     this.handleStyle.top = handlePosition + 'px';
 
   }
   else { //horizontal
-    this.handleStyle.width = handleSize + 'px';
-    this.handleStyle.left = handlePosition + 'px';
+    this.handleStyle.width = handleSize/4 + 'px';
+    this.handleStyle.height = "32px";
+    //this.handleStyle.left = handlePosition + 'px';
+    this.handleStyle.left = "0px";
+    
   }
 
-  this.sliderStyle.display = 'block';
 };
 
 WalkontableScrollbar.prototype.destroy = function () {
   clearInterval(this.dragdealer.interval);
 };
 
-///
 
 var WalkontableVerticalScrollbar = function (instance) {
   this.instance = instance;
@@ -13511,7 +13509,7 @@ Dragdealer.prototype =
 		if(target === undefined)
 		{
 			target = [
-				Cursor.x - this.offset.wrapper[0] - (this.handle.offsetWidth / 2),
+				Cursor.x - this.offset.wrapper[0] - (this.handle.offset / 2),
 				Cursor.y - this.offset.wrapper[1] - (this.handle.offsetHeight / 2)
 			];
 		}
