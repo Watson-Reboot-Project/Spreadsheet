@@ -334,8 +334,10 @@ $(document).ready(function() {
 	
 	//Listens for double click MITCHELL'S NOTE
 	//Editor works just as well as typing into the cell itself.
-	//Giving all clicks this functionality makes mobile easier to handle.
-	$('#' + tableDiv.id).on('click', function(evt) {
+	//Giving all clicks with cells as the target makes mobile easier to handle.
+	//$('#' + tableDiv.id).on('click', function(evt) {
+    $('td').click(function(evt) {
+    console.log($('#' + tableDiv.id));
 		var selected = ht.getSelected();
 		if(currSelect!==undefined && selected[0]==selected[2] && selected[1]==selected[3] &&
 		selected[0]==currSelect[0] && selected[1]==currSelect[1])
@@ -353,7 +355,10 @@ $(document).ready(function() {
 			if(data != null) changeInput(data);
 		}*/
 	});
-	
+	//incredibly annoying css regarding scrollbars.
+	//I've given up on doing this the proper way.
+	var vertdrag = $(".vertdrag")[0];
+  vertdrag.style.height = "80px";
 });
 
 //Handles functionality of whenever the enter key is pressed. This should be the
@@ -372,6 +377,7 @@ function pressEnter(event)
 		event.stopImmediatePropagation();
 		ht.selectCell(selected[0]-1, selected[1], selected[0]-1, selected[1], true);
 	}
+	currSelect = ht.getSelected();
 }
 
 function fillFuncTracker(selected)

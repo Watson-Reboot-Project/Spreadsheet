@@ -1,34 +1,16 @@
 /** For ipad and ipad mini **/
 <style>
+/*
 @media only screen and (min-device-width : 768px) and (max-device-width : 1024px)
 {
-   /* STYLES GO HERE */
    #container { width: 600px; height: 800px; }
-   ::-webkit-scrollbar
-   {
-    width: 20px;
-    }
 }
-
-/** iphone / smartphones **/
 @media only screen and (min-device-width : 320px) and (max-device-width : 568px)
 {
-   /* STYLES GO HERE */
    #container { width: 220px; height: 300px; }
-   ::-webkit-scrollbar
-   {
-    width: 20px;
-    }
 }
-
-/** Samsung Galaxy S3 in portrait **/
 @media only screen and (-webkit-device-pixel-ratio: 2)
 {
-   /* YOUR STYLE GOES HERE */
    #container { width: 600px; height: 400px; }
-   ::-webkit-scrollbar
-   {
-    width: 20px;
-    }
-}
+}*/
 </style>

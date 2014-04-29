@@ -11383,10 +11383,10 @@ WalkontableScrollbar.prototype.init = function () {
   //create elements
   this.slider = document.createElement('DIV');
   this.sliderStyle = this.slider.style;
-  this.sliderStyle.position = 'absolute';
+  this.sliderStyle.position = 'relative';
   this.sliderStyle.top = '0';
   this.sliderStyle.left = '0';
-  this.sliderStyle.display = 'none';
+  //this.sliderStyle.display = 'none';
   this.slider.className = 'dragdealer ' + this.type;
 
   this.handle = document.createElement('DIV');
@@ -11429,6 +11429,22 @@ WalkontableScrollbar.prototype.init = function () {
       that.onScroll(dragDelta);
     }
   });
+  //MITCHELLSNOTE
+  if(this.dragdealer.vertical == 1)
+  {
+      this.dragdealer.wrapper.style.width = "50px";
+      this.dragdealer.wrapper.children[0].style.width = "50px";
+      this.dragdealer.wrapper.children[0].style.height = "80px";
+      var temp = this.dragdealer.wrapper.children[0];
+      temp.className = temp.className + " vertdrag";
+  }
+  else
+  {
+      this.dragdealer.wrapper.style.height = "50px";
+      this.dragdealer.wrapper.children[0].style.width = "80px";
+      this.dragdealer.wrapper.children[0].style.height = "50px";
+  }
+  //ENDMITCHELLSNOTE
   this.skipRefresh = false;
 };
 
@@ -11519,9 +11535,10 @@ WalkontableScrollbar.prototype.refresh = function () {
     }
 
     sliderSize = tableHeight - 2; //2 is sliders border-width
-
-    this.sliderStyle.top = this.instance.wtDom.offset(this.$table[0]).top - this.instance.wtDom.offset(this.container).top + 'px';
-    this.sliderStyle.left = tableWidth - 1 + 'px'; //1 is sliders border-width
+    this.sliderStyle.float = "right";
+    //this.sliderStyle.top = this.instance.wtDom.offset(this.$table[0]).top - this.instance.wtDom.offset(this.container).top + 'px';
+    this.sliderStyle.top = -tableHeight;
+    //this.sliderStyle.left = tableWidth - 1 + 'px'; //1 is sliders border-width
     this.sliderStyle.height = Math.max(sliderSize, 0) + 'px';
   }
   else { //horizontal
@@ -11531,9 +11548,11 @@ WalkontableScrollbar.prototype.refresh = function () {
     this.sliderStyle.top = tableHeight - 1 + 'px'; //1 is sliders border-width
     this.sliderStyle.width = Math.max(sliderSize, 0) + 'px';
   }
-
   ratio = this.getHandleSizeRatio(visibleCount, this.total);
-  handleSize = Math.round(sliderSize * ratio);
+  //handleSize = Math.round(sliderSize * ratio);
+  //MITCHELLSNOTEM
+  handleSize = 80;
+  //MITCHELLSNOTEM
   if (handleSize < 10) {
     handleSize = 15;
   }
@@ -11549,11 +11568,12 @@ WalkontableScrollbar.prototype.refresh = function () {
 
   }
   else { //horizontal
+    this.sliderStyle.position = "absolute";
     this.handleStyle.width = handleSize + 'px';
     this.handleStyle.left = handlePosition + 'px';
+    this.sliderStyle.display = 'block';
   }
 
-  this.sliderStyle.display = 'block';
 };
 
 WalkontableScrollbar.prototype.destroy = function () {
@@ -13506,7 +13526,7 @@ Dragdealer.prototype =
 		if(target === undefined)
 		{
 			target = [
-				Cursor.x - this.offset.wrapper[0] - (this.handle.offsetWidth / 2),
+				Cursor.x - this.offset.wrapper[0] - (this.handle.offset / 2),
 				Cursor.y - this.offset.wrapper[1] - (this.handle.offsetHeight / 2)
 			];
 		}
