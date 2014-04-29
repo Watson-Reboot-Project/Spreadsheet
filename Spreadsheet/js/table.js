@@ -355,10 +355,6 @@ $(document).ready(function() {
 			if(data != null) changeInput(data);
 		}*/
 	});
-	//incredibly annoying css regarding scrollbars.
-	//I've given up on doing this the proper way.
-	var vertdrag = $(".vertdrag")[0];
-  vertdrag.style.height = "80px";
 });
 
 //Handles functionality of whenever the enter key is pressed. This should be the

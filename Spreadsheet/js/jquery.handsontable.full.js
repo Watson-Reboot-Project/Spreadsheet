@@ -11383,7 +11383,7 @@ WalkontableScrollbar.prototype.init = function () {
   //create elements
   this.slider = document.createElement('DIV');
   this.sliderStyle = this.slider.style;
-  this.sliderStyle.position = 'relative';
+  this.sliderStyle.position = 'absolute';
   this.sliderStyle.top = '0';
   this.sliderStyle.left = '0';
   //this.sliderStyle.display = 'none';
@@ -11408,7 +11408,7 @@ WalkontableScrollbar.prototype.init = function () {
     vertical: (this.type === 'vertical'),
     horizontal: (this.type === 'horizontal'),
     slide: false,
-    speed: 100,
+    speed: 200,
     animationCallback: function (x, y) {
       if (firstRun) {
         firstRun = false;
@@ -11429,22 +11429,6 @@ WalkontableScrollbar.prototype.init = function () {
       that.onScroll(dragDelta);
     }
   });
-  //MITCHELLSNOTE
-  if(this.dragdealer.vertical == 1)
-  {
-      this.dragdealer.wrapper.style.width = "50px";
-      this.dragdealer.wrapper.children[0].style.width = "50px";
-      this.dragdealer.wrapper.children[0].style.height = "80px";
-      var temp = this.dragdealer.wrapper.children[0];
-      temp.className = temp.className + " vertdrag";
-  }
-  else
-  {
-      this.dragdealer.wrapper.style.height = "50px";
-      this.dragdealer.wrapper.children[0].style.width = "80px";
-      this.dragdealer.wrapper.children[0].style.height = "50px";
-  }
-  //ENDMITCHELLSNOTE
   this.skipRefresh = false;
 };
 
@@ -11536,10 +11520,10 @@ WalkontableScrollbar.prototype.refresh = function () {
 
     sliderSize = tableHeight - 2; //2 is sliders border-width
     this.sliderStyle.float = "right";
-    //this.sliderStyle.top = this.instance.wtDom.offset(this.$table[0]).top - this.instance.wtDom.offset(this.container).top + 'px';
-    this.sliderStyle.top = -tableHeight;
-    //this.sliderStyle.left = tableWidth - 1 + 'px'; //1 is sliders border-width
+    this.sliderStyle.top = this.instance.wtDom.offset(this.$table[0]).top - this.instance.wtDom.offset(this.container).top + 'px';
+    this.sliderStyle.left = $(".htcore")[0].offsetWidth + 'px'; //1 is sliders border-width
     this.sliderStyle.height = Math.max(sliderSize, 0) + 'px';
+    this.sliderStyle.width = "32px";
   }
   else { //horizontal
     sliderSize = tableWidth - 2; //2 is sliders border-width
@@ -11547,12 +11531,10 @@ WalkontableScrollbar.prototype.refresh = function () {
     this.sliderStyle.left = this.instance.wtDom.offset(this.$table[0]).left - this.instance.wtDom.offset(this.container).left + 'px';
     this.sliderStyle.top = tableHeight - 1 + 'px'; //1 is sliders border-width
     this.sliderStyle.width = Math.max(sliderSize, 0) + 'px';
+    this.sliderStyle.height = "32px";
   }
   ratio = this.getHandleSizeRatio(visibleCount, this.total);
-  //handleSize = Math.round(sliderSize * ratio);
-  //MITCHELLSNOTEM
-  handleSize = 80;
-  //MITCHELLSNOTEM
+  handleSize = Math.round(sliderSize * ratio)*2;
   if (handleSize < 10) {
     handleSize = 15;
   }
@@ -11564,14 +11546,16 @@ WalkontableScrollbar.prototype.refresh = function () {
 
   if (this.type === 'vertical') {
     this.handleStyle.height = handleSize + 'px';
+    this.handleStyle.width = "32px";
     this.handleStyle.top = handlePosition + 'px';
 
   }
   else { //horizontal
-    this.sliderStyle.position = "absolute";
-    this.handleStyle.width = handleSize + 'px';
-    this.handleStyle.left = handlePosition + 'px';
-    this.sliderStyle.display = 'block';
+    this.handleStyle.width = handleSize/4 + 'px';
+    this.handleStyle.height = "32px";
+    //this.handleStyle.left = handlePosition + 'px';
+    this.handleStyle.left = "0px";
+    
   }
 
 };
@@ -11580,7 +11564,6 @@ WalkontableScrollbar.prototype.destroy = function () {
   clearInterval(this.dragdealer.interval);
 };
 
-///
 
 var WalkontableVerticalScrollbar = function (instance) {
   this.instance = instance;
