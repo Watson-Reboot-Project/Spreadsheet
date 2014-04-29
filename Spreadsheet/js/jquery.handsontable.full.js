@@ -2789,11 +2789,10 @@ Handsontable.TableView.prototype.appendColHeader = function (col, TH) {
   var that = this;
   $(DIV).on("vmousedown", function(evt)
     {
-      console.log(that.wt);
       timevert = setInterval(function()
       {
         that.wt.scrollVertical(-1).draw();
-      }, 100);
+      }, scrollInterval);
       
     });
     
@@ -12733,11 +12732,10 @@ WalkontableTable.prototype._doDraw = function () {
           var yay = TR.appendChild(document.createElement('TH'));
           $(yay).on("vmousedown", function(evt)
           {
-            console.log(that.instance);
             timehor = setInterval(function()
             {
               that.instance.scrollHorizontal(-1).draw();
-            }, 100);
+            }, scrollInterval);
       
           });
     

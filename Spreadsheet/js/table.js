@@ -30,6 +30,7 @@ var updateState = [false, 0, 0];
 //handles touch events for scrolling at the top and left of the table.
 var timevert;
 var timehor;
+var scrollInterval = 120;
 //enumerator for the six types of string formatting
 formatOption = {
   ZERO:0,
