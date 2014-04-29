@@ -27,6 +27,9 @@ var formatArray =[];
 var updateTable = [];
 //keeps track of whether cells are updating and which cell initiated the update cycle
 var updateState = [false, 0, 0];
+//handles touch events for scrolling at the top and left of the table.
+var timevert;
+var timehor;
 //enumerator for the six types of string formatting
 formatOption = {
   ZERO:0,

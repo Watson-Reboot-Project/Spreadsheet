@@ -2764,9 +2764,14 @@ Handsontable.TableView.prototype.appendRowHeader = function (row, TH) {
   else {
     var DIV = document.createElement('DIV');
     DIV.className = 'relative';
+    var that = this;
     this.wt.wtDom.fastInnerText(DIV, '\u00A0');
     this.wt.wtDom.empty(TH);
     TH.appendChild(DIV);
+    $(DIV).on("vclick", function(evt)
+    {
+      console.log(evt);
+    });
   }
 };
 
@@ -2781,6 +2786,21 @@ Handsontable.TableView.prototype.appendColHeader = function (col, TH) {
 
   DIV.className = 'relative';
   SPAN.className = 'colHeader';
+  var that = this;
+  $(DIV).on("vmousedown", function(evt)
+    {
+      console.log(that.wt);
+      timevert = setInterval(function()
+      {
+        that.wt.scrollVertical(-1).draw();
+      }, 100);
+      
+    });
+    
+    $(DIV).on("vmouseup", function(evt)
+    {
+      clearInterval(timevert);
+    });
 
   this.wt.wtDom.fastInnerHTML(SPAN, this.instance.getColHeader(col));
   DIV.appendChild(SPAN);
@@ -7293,7 +7313,6 @@ Handsontable.PluginHooks = new Handsontable.PluginHookClass();
       tmp.table = d.createElement('table');
       tmp.theadTh = d.createElement('th');
       tmp.table.appendChild(d.createElement('thead')).appendChild(d.createElement('tr')).appendChild(tmp.theadTh);
-
       tmp.tableStyle = tmp.table.style;
       tmp.tableStyle.tableLayout = 'auto';
       tmp.tableStyle.width = 'auto';
@@ -11154,7 +11173,6 @@ WalkontableScroll.prototype.scrollVertical = function (delta) {
     , fixedCount = instance.getSetting('fixedRowsTop')
     , total = instance.getSetting('totalRows')
     , maxSize = instance.wtViewport.getViewportHeight();
-
   if (total > 0) {
     newOffset = this.scrollLogicVertical(delta, offset, total, fixedCount, maxSize, function (row) {
       if (row - offset < fixedCount && row - offset >= 0) {
@@ -11538,10 +11556,14 @@ WalkontableScrollbar.prototype.refresh = function () {
   if (handleSize < 10) {
     handleSize = 15;
   }
+  //I really want the handlesize to be standard and larger.
+  //MITCHELLSNOTEM
+  handleSize = 80;
+  //MITCHLLSNOTEM
 
   handlePosition = Math.floor(sliderSize * (this.offset / this.total));
   if (handleSize + handlePosition > sliderSize) {
-    handlePosition = sliderSize - handleSize;
+    handlePosition = sliderSize- handleSize;
   }
 
   if (this.type === 'vertical') {
@@ -11551,10 +11573,10 @@ WalkontableScrollbar.prototype.refresh = function () {
 
   }
   else { //horizontal
-    this.handleStyle.width = handleSize/4 + 'px';
+    this.handleStyle.width = handleSize + 'px';
     this.handleStyle.height = "32px";
-    //this.handleStyle.left = handlePosition + 'px';
-    this.handleStyle.left = "0px";
+    this.handleStyle.left = handlePosition + 'px';
+    //this.handleStyle.left = "0px";
     
   }
 
@@ -12704,12 +12726,27 @@ WalkontableTable.prototype._doDraw = function () {
       if (cloneLimit !== void 0 && r === cloneLimit) {
         break; //we have as much rows as needed for this clone
       }
-
+      var that  = this;
       if (r >= this.tbodyChildrenLength || (this.verticalRenderReverse && r >= this.rowFilter.fixedCount)) {
         TR = document.createElement('TR');
         for (c = 0; c < displayThs; c++) {
-          TR.appendChild(document.createElement('TH'));
-        }
+          var yay = TR.appendChild(document.createElement('TH'));
+          $(yay).on("vmousedown", function(evt)
+          {
+            console.log(that.instance);
+            timehor = setInterval(function()
+            {
+              that.instance.scrollHorizontal(-1).draw();
+            }, 100);
+      
+          });
+    
+          $(yay).on("vmouseup", function(evt)
+          {
+            clearInterval(timehor);
+          });
+          
+          }
         if (this.verticalRenderReverse && r >= this.rowFilter.fixedCount) {
           this.TBODY.insertBefore(TR, this.TBODY.childNodes[this.rowFilter.fixedCount] || this.TBODY.firstChild);
         }
