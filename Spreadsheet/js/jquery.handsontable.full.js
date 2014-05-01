@@ -2768,10 +2768,6 @@ Handsontable.TableView.prototype.appendRowHeader = function (row, TH) {
     this.wt.wtDom.fastInnerText(DIV, '\u00A0');
     this.wt.wtDom.empty(TH);
     TH.appendChild(DIV);
-    $(DIV).on("vclick", function(evt)
-    {
-      console.log(evt);
-    });
   }
 };
 
@@ -11446,6 +11442,18 @@ WalkontableScrollbar.prototype.init = function () {
       that.onScroll(dragDelta);
     }
   });
+  if(this.dragdealer.vertical)
+    {
+      if (typeof(vertDragDealer) !== 'undefined')
+      vertDragDealer = this;
+    }
+    else
+    {
+       if(typeof(horDragDealer) !== 'undefined')
+       {
+        horDragDealer = this;
+       }
+    }
   this.skipRefresh = false;
 };
 
@@ -12183,7 +12191,7 @@ function WalkontableSettings(instance, settings) {
     //presentation mode
     scrollH: 'auto', //values: scroll (always show scrollbar), auto (show scrollbar if table does not fit in the container), none (never show scrollbar)
     scrollV: 'auto', //values: see above
-    nativeScrollbars: false, //values: false (dragdealer), true (native)
+    nativeScrollbars: true, //values: false (dragdealer), true (native)
     stretchH: 'hybrid', //values: hybrid, all, last, none
     currentRowClassName: null,
     currentColumnClassName: null,
@@ -13253,12 +13261,21 @@ var Cursor =
 	},
 	setEvent: function(type)
 	{
+    
+    //MITCHELLSNOTEM
+    //So this is annoying. This type of movement isn't captured on phones.
 		var moveHandler = document['on' + type + 'move'] || function(){};
 		document['on' + type + 'move'] = function(e)
 		{
 			moveHandler(e);
 			Cursor.refresh(e);
 		}
+		$(document).bind("vmousemove", function(e)
+		{
+      moveHandler(e);
+      Cursor.refresh(e);
+		});
+		//MITCHELLSNOTEM
 	},
 	refresh: function(e)
 	{
@@ -13266,7 +13283,8 @@ var Cursor =
 		{
 			e = window.event;
 		}
-		if(e.type == 'mousemove')
+		//MITCHELLNOTEM
+		if(e.type == 'mousemove' || e.type == 'vmousemove')
 		{
 			this.set(e);
 		}
@@ -13277,10 +13295,10 @@ var Cursor =
 	},
 	set: function(e)
 	{
-		if(e.pageX || e.pageY)
+		if(true)
 		{
-			this.x = e.pageX;
-			this.y = e.pageY;
+			this.x = e.clientX;
+			this.y = e.clientY;
 		}
 		else if(document.body && (e.clientX || e.clientY)) //need to check whether body exists, because of IE8 issue (#1084)
 		{
@@ -13439,15 +13457,17 @@ Dragdealer.prototype =
 		{
 			return false;
 		}
-		this.handle.onmousedown = this.handle.ontouchstart = function(e)
+		//MITCHELLSNOTEM
+		//Need to replace these functions with more mobile friendly ones.
+		/*this.handle.onmousedown = this.handle.ontouchstart = function(e)
 		{
 			self.handleDownHandler(e);
 		};
+		
 		this.wrapper.onmousedown = this.wrapper.ontouchstart = function(e)
 		{
 			self.wrapperDownHandler(e);
 		};
-		var mouseUpHandler = document.onmouseup || function(){};
 		document.onmouseup = function(e)
 		{
 			mouseUpHandler(e);
@@ -13459,16 +13479,34 @@ Dragdealer.prototype =
 			touchEndHandler(e);
 			self.documentUpHandler(e);
 		};
+		*/
+		$(this.handle).on("vmousedown", function(e)
+		{
+      e.preventDefault();
+      self.handleDownHandler(e);
+		});
+		var mouseUpHandler = document.onmouseup || function(){};
+		$(document).bind("vmouseup", function(e)
+		{
+      e.preventDefault();
+      mouseUpHandler(e);
+      self.documentUpHandler(e);
+		});
 		var resizeHandler = window.onresize || function(){};
 		window.onresize = function(e)
 		{
 			resizeHandler(e);
 			self.documentResizeHandler(e);
 		};
-		this.wrapper.onmousemove = function(e)
+		$(this.wrapper).on("vmousemove", function(e)
 		{
-			self.activity = true;
-		}
+      e.preventDefault();
+      self.activity = true;
+		});
+		//this.wrapper.onmousemove = function(e)
+		//{
+		//	self.activity = true;
+		//}
 		this.wrapper.onclick = function(e)
 		{
 			return !self.activity;
@@ -13481,7 +13519,6 @@ Dragdealer.prototype =
 	{
 		this.activity = false;
 		Cursor.refresh(e);
-		
 		this.preventDefaults(e, true);
 		this.startDrag();
 	},
@@ -13570,12 +13607,22 @@ Dragdealer.prototype =
 
 		this.setWrapperOffset();
 		this.setBounds();
-
+    /*
+    //MITCHELLSNOTEM.
 		this.offset.mouse = [
 			Cursor.x - Position.get(this.handle)[0],
 			Cursor.y - Position.get(this.handle)[1]
 		];
-		
+		//The position seems off until I figure out why, I figure:
+		//As a general rule, the offset cannot be larger than the handle length*/
+		var handleWidth = $(this.handle).width();
+		var handleHeight = $(this.handle).height();
+		/*if(Math.abs(this.offset.mouse[0])>handleWidth)
+      this.offset.mouse[0] = handleWidth;
+     if(Math.abs(this.offset.mouse[1])>handleHeight)
+      this.offset.mouse[1] = handleHeight;
+    */  
+    this.offset.mouse = [handleWidth/2,handleHeight/2];
 		this.dragging = true;
 	},
 	stopDrag: function()
@@ -13584,6 +13631,7 @@ Dragdealer.prototype =
 		{
 			return;
 		}
+		console.log(this);
 		this.dragging = false;
 		
 		var target = this.groupClone(this.value.current);
@@ -13628,7 +13676,6 @@ Dragdealer.prototype =
 		if(this.dragging)
 		{
 			var prevTarget = this.groupClone(this.value.target);
-			
 			var offset = [
 				Cursor.x - this.offset.wrapper[0] - this.offset.mouse[0],
 				Cursor.y - this.offset.wrapper[1] - this.offset.mouse[1]

@@ -69,6 +69,8 @@ var currSelect = [0,0,0,0];
 var funcTracker = new Array();
 var meditorManager;
 var currentEditor;
+var horDragDealer = 0;
+var vertDragDealer = 0;
 
 $('#' + tableDiv.id).handsontable({
   minSpareRows: 30,
@@ -360,6 +362,15 @@ $(document).ready(function() {
 		}*/
 	});
 });
+  //Some mobile devices do not register mouseup events. Suffice to say, when
+  //there is a mousedown event, there must have been a preceding mouseup. This
+  //makes sure things are in their correct state.
+  $(document).on("mousedown", function(e)
+  {
+    console.log(horDragDealer, vertDragDealer);
+    horDragDealer.dragging = false;
+    vertDragDealer.dragging = false;
+  });
 
 //Handles functionality of whenever the enter key is pressed. This should be the
 //same regardless of whether the input field or table is focused.
