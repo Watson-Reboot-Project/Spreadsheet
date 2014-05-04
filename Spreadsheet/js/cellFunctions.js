@@ -15,12 +15,71 @@ var nonabsolute = /[^~\$][A-Z]\d+/;
 
 //Redoes the last undone operation
 function undo() {
-	ht.undo();
+  URFlag = URTypes.UNDO;
+  if(URIndex<0)
+    URIndex = 0;
+  else if(URArray[URIndex-1]!==undefined){
+  console.log(URArray, URIndex, URArray[URIndex-1]);
+  switch(URArray[URIndex-1].type)
+  {
+    case URTypes.NORMAL:
+      console.log("hey");
+      ht.undo();
+      break;
+    case URTypes.FUNCTION:
+      var selection = URArray[URIndex-1].selection;
+      //var fillerArray = [];
+      for(var i = selection[0]; i<=selection[2]; i++)
+      {
+        //fillerArray[i-selection[0]] = [];
+        for(var k = selection[1]; k<=selection[3]; k++)
+        {
+            //if(funcTracker[i*ht.countRows()+k]!==undefined)
+            //  fillerArray[i-selection[0]][k-selection[1]] = funcTracker[i*ht.countRows()+k].funcString;
+            formatArray[i][k].index--;
+            if(formatArray[i][k].index<0)
+              formatArray[i][k].index = 0;
+            if(formatArray[i][k].type[formatArray[i][k].index]===undefined)
+              formatArray[i][k].type[formatArray[i][k].index] = 0;
+        }
+      }
+      ht.undo();
+      break;
+  }
+  URIndex--;
+  }
 }
 
 //Undoes the last operation
 function redo() {
-	ht.redo();
+  URFlag = URTypes.REDO;
+  console.log(URArray, URIndex, URArray[URIndex]);
+  if(URArray.length>URIndex)
+  {
+  switch(URArray[URIndex].type)
+  {
+      case URTypes.NORMAL:
+        console.log("hey2");
+        ht.redo();
+      break;
+      case URTypes.FUNCTION:
+        var selection = URArray[URIndex].selection;
+        var fillerArray = [];
+        for(var i = selection[0]; i<=selection[2]; i++)
+        {
+          //fillerArray[i-selection[0]] = [];
+          for(var k = selection[1]; k<=selection[3]; k++)
+          {
+              //if(funcTracker[i*ht.countRows()+k]!==undefined)
+              //  fillerArray[i-selection[0]][k-selection[1]] = funcTracker[i*ht.countRows()+k].funcString;
+              formatArray[i][k].index++;
+          }
+        }
+        ht.redo();
+      break;
+    }
+    URIndex++;
+  }
 }
 
 //Handles the sum operation
@@ -85,6 +144,11 @@ function average() {
 function format()
 {
   var selected = ht.getSelected();
+  URFlag = URTypes.FUNCTION;
+  URArray[URIndex] = {};
+  URArray[URIndex].type = URTypes.FUNCTION;
+  URArray[URIndex].selection = selected;
+  URIndex++;
 	if (selected != undefined)
 	{
       if(selected[0]<selected[2])
@@ -114,7 +178,7 @@ function format()
 	var sel = new Selector();
 	sel.open("Format Number", options, function(selection)
 {
-
+    var fillerArray = [];
     if(selection!==null)
     {
       if (selection.indexOf("$1.00")>=0)
@@ -133,16 +197,29 @@ function format()
       {
         if(formatArray[i]===undefined)
           formatArray[i] = [];
+        fillerArray[i-row] = [];
         for(var k = col; k <= endCol; k++)
         {
-          formatArray[i][k] = choice;
+          if(formatArray[i][k] ===undefined)
+          {
+            formatArray[i][k] ={};
+            formatArray[i][k].index =0;
+            formatArray[i][k].type = [0];
+            
+          }
+          formatArray[i][k].index++;
+          var index = formatArray[i][k].index;
+          formatArray[i][k].type[index] = choice;
+          
           if(funcTracker[i*ht.countRows()+k]!==undefined)
           {
-            ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+            fillerArray[i-row][k-col] = funcTracker[i*ht.countRows()+k].funcString;
+            //ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
           }
         }
       }
     }
+    ht.populateFromArray(selected[0], selected[1], fillerArray, selected[2], selected[3]);
 }, div);
 }
 
@@ -379,7 +456,7 @@ function functionSUM(details)
     for(var k =details.col;k<=details.endCol;k++)
     {
       temp=ht.getDataAtCell(i, k);
-      if(temp!==null)
+      if(temp!=null && temp!=undefined)
       {
         temp = temp.replace(/\$/g,'');
         temp = parseInt(temp);
@@ -388,7 +465,12 @@ function functionSUM(details)
           sum+=temp;
         }
       }
+      else if(temp===undefined)
+      {
+        sum = "#REF";
+        break;  
       }
+    }
   }
   return sum;
 }
@@ -573,7 +655,7 @@ function evaluateTableExpression(expression, selectedCell)
                 cellGet = true;
           }
       }
-      if(expression.indexOf("#ERROR")>=0)
+      if(expression.indexOf("#ERROR")>=0 || expression.indexOf("#REF")>=0)
       {
         return "#ERROR";
       }
@@ -776,7 +858,6 @@ function generateFillerArray(copySelection, pasteSelection)
           counti++;
        }
     }
-    console.log(fillerArray);
     return fillerArray;
 }
 
@@ -847,6 +928,5 @@ function modifiedFunctionString(initialRow, initialCol, pasteRow, pasteCol, oldF
       }
       oldFS = oldFS.replace(/~/g, '');
     }
-    console.log(oldFS);
     return oldFS;
 }

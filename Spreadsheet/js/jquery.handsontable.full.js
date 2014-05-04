@@ -9054,6 +9054,7 @@ function Storage(prefix) {
   };
 
   Handsontable.UndoRedo.prototype.done = function (action) {
+    console.log(this.ignoreNewActions);
     if (!this.ignoreNewActions) {
       this.doneActions.push(action);
       this.undoneActions.length = 0;
@@ -9070,7 +9071,6 @@ function Storage(prefix) {
       this.ignoreNewActions = true;
       action.undo(this.instance);
       this.ignoreNewActions = false;
-
       this.undoneActions.push(action);
     }
   };
@@ -9084,8 +9084,10 @@ function Storage(prefix) {
 
       this.ignoreNewActions = true;
       action.redo(this.instance);
-      this.ignoreNewActions = true;
-
+      //MITCHELLSNOTe
+      //Wow. This was set to true. Clearly a bug. I should really notify the
+      //people who made this code.
+      this.ignoreNewActions = false;
       this.doneActions.push(action);
     }
   };
@@ -9370,7 +9372,8 @@ if (typeof Handsontable !== 'undefined') {
     else {
       dragToScroll.setBoundaries(instance.$table[0].getBoundingClientRect());
     }
-
+    //MITCHELLSNOTE
+    // I'm actually really annoyed with the dragtoScroll feature, so I'm removing it.
     dragToScroll.setCallback(function (scrollX, scrollY) {
       if (scrollX < 0) {
         if (scrollHandler) {
@@ -13486,9 +13489,8 @@ Dragdealer.prototype =
       self.handleDownHandler(e);
 		});
 		var mouseUpHandler = document.onmouseup || function(){};
-		$(document).bind("vmouseup", function(e)
+		$(document).on("vmouseup", function(e)
 		{
-      e.preventDefault();
       mouseUpHandler(e);
       self.documentUpHandler(e);
 		});
@@ -13631,7 +13633,6 @@ Dragdealer.prototype =
 		{
 			return;
 		}
-		console.log(this);
 		this.dragging = false;
 		
 		var target = this.groupClone(this.value.current);

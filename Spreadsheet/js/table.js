@@ -40,6 +40,17 @@ formatOption = {
   DOLLARS:4,
   FNONE:5
 };
+//enumerator for the undo/redo tracking array.
+URTypes = 
+{
+  NORMAL:0,
+  FUNCTION:1,
+  UNDO:2,
+  REDO:3
+};
+var URArray = [];
+var URIndex = 0;
+var URFlag = URTypes.NORMAL;
  
  ib.bind('input', function(event)
  {
@@ -110,6 +121,14 @@ $(document).ready(function() {
 	//Listen for any changes to cells.
 	$("#" + tableDiv.id).handsontable({
 		afterChange: function(changes, source) {
+      if(URFlag == URTypes.NORMAL)
+      {
+        URArray[URIndex] = {};
+        URArray[URIndex].type = URTypes.NORMAL;
+        URIndex++;
+        URArray = URArray.slice(0,URIndex);
+      }
+      URFlag = URTypes.NORMAL;
 			var selected = ht.getSelected();
 			var isFunction = false
 			var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
@@ -301,7 +320,7 @@ $(document).ready(function() {
         //check for format specified
         if(formatArray[selected[0]]!==undefined &&
         formatArray[selected[0]][selected[1]]!==undefined &&
-        formatArray[selected[0]][selected[1]]!=formatOption.FNONE &&
+        formatArray[selected[0]][selected[1]].type[formatArray[selected[0]][selected[1]].index]!=formatOption.FNONE &&
         !isNaN(parseFloat(value.value)))
         {
           var index = value.value.indexOf('.');
@@ -314,7 +333,8 @@ $(document).ready(function() {
             index = value.value.length;
             value.value =value.value+".000";
           }
-          switch(formatArray[selected[0]][selected[1]])
+          var format = formatArray[selected[0]][selected[1]];
+          switch(format.type[format.index])
           {
             case formatOption.ZERO:
               value.value = value.value.substr(0,index);
@@ -343,7 +363,6 @@ $(document).ready(function() {
 	//Giving all clicks with cells as the target makes mobile easier to handle.
 	//$('#' + tableDiv.id).on('click', function(evt) {
     $('td').click(function(evt) {
-    console.log($('#' + tableDiv.id));
 		var selected = ht.getSelected();
 		if(currSelect!==undefined && selected[0]==selected[2] && selected[1]==selected[3] &&
 		selected[0]==currSelect[0] && selected[1]==currSelect[1])
@@ -367,7 +386,6 @@ $(document).ready(function() {
   //makes sure things are in their correct state.
   $(document).on("mousedown", function(e)
   {
-    console.log(horDragDealer, vertDragDealer);
     horDragDealer.dragging = false;
     vertDragDealer.dragging = false;
   });
