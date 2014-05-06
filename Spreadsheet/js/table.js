@@ -20,13 +20,11 @@
 	 //Creates a 4-dimensional table which stores data for which other cells use a certain cell.
 	 //The way this is used is that the first two dimensions locate the cell which is depended on.
 	 //The second two dimensions are for the dependant cells.
-	 var usedBy = [];
-	 this.usedBy = usedBy;
+	 this.usedBy = [];
 	//Creates a 4-dimensional table which stores data for which cells are used by the specified cell.
 	//The first two dimensions locate the dependant cell. The last two represent cells which are
 	//dependencies.
-	var dependantOn =[];
-	this.dependantOn = dependantOn;
+	this.dependantOn = [];
 	//Note: for all dependencies, undefined is equivalent to false.
 	//stores data for format
 	var formatArray =[];
@@ -45,6 +43,7 @@
 	
 	var T, ht, AE, CF, FP;
 	T = this;
+	console.log(T);
 	//enumerator for the six types of string formatting
 	formatOption = {
 	  ZERO:0,
@@ -73,9 +72,10 @@
 	 {
 	  recentChanges = true;
 		var selected = ht.getSelected();
-		meditorManager.openEditorWithoutFocus();
-		currentEditor.setValue(ib.val());
-		currentEditor.refreshDimensions();
+		editor = meditorManager;
+		editor.openEditorWithoutFocus();
+		editor.getActiveEditor().setValue(ib.val());
+		editor.getActiveEditor().refreshDimensions();
 		//obsolete after using the editor
 		//ht.setDataAtCell(selected[0],selected[1], ib.val());
 	 });
@@ -270,15 +270,15 @@
 	      if(!updateState[0])
 	      {
 	        updateTable[selected[0]*ht.countRows()+selected[1]] = true;
-	        if(usedBy[selected[0]]!==undefined && usedBy[selected[0]][selected[1]]!==undefined)
+	        if(T.usedBy[selected[0]]!==undefined && T.usedBy[selected[0]][selected[1]]!==undefined)
 	        {
-	        for(var i = 0; i<=usedBy[selected[0]][selected[1]].length; i++)
+	        for(var i = 0; i<=T.usedBy[selected[0]][selected[1]].length; i++)
 	         {
-	          if(usedBy[selected[0]][selected[1]][i]!==undefined)
+	          if(T.usedBy[selected[0]][selected[1]][i]!==undefined)
 	          {
-	              for(var k = 0; k<=usedBy[selected[0]][selected[1]][i].length; k++)
+	              for(var k = 0; k<=T.usedBy[selected[0]][selected[1]][i].length; k++)
 	              {
-	                if(usedBy[selected[0]][selected[1]][i][k])
+	                if(T.usedBy[selected[0]][selected[1]][i][k])
 	                    CF.setUpdateTable(i,k);
 	              }
 	          }
@@ -369,8 +369,8 @@
 	          }
 	        }
 				}
+				console.log(T.usedBy);
 			}
-
 		});
 		
 		//Listens for double click MITCHELL'S NOTE

@@ -337,7 +337,7 @@ function CellFunctions(figNum) {
 
   //takes coordinates for a selection and a specified cell, and marks all
   //cells within the range specified in details as used by cell
-  this.updateDependencyArrays = function(row, col, endRow, endCol, cellRow, cellCol)
+  function updateDependencyArrays(row, col, endRow, endCol, cellRow, cellCol)
   {
     var error = false;
     for (var i=row; i<=endRow; i++)
@@ -371,14 +371,14 @@ function CellFunctions(figNum) {
     }
     return error;
   }
-  updateDependencyArrays = this.updateDependencyArrays;
+  this.updateDependencyArrays = updateDependencyArrays;
 
   //Convenience function that allows for a much smaller signature of updateDependencyArrays()
-  this.updateDependencyByDetails = function(details, cell)
+  function updateDependencyByDetails(details, cell)
   {
     return updateDependencyArrays(details.row, details.col, details.endRow, details.endCol, cell.row, cell.col);
   }
-  updateDependencyByDetails = this.updateDependencyByDetails;
+  this.updateDependencyByDetails = updateDependencyByDetails;
 
   //sets the value of all dependant cells
   this.notifyDependants = function(row, col)
@@ -442,8 +442,9 @@ function CellFunctions(figNum) {
   }
   clearAssociations = this.clearAssociations;
 
-  this.functionSUM = function(details)
+  function functionSUM(details)
   {
+    console.log(ht);
     var sum = 0;
     var temp = 0;
     if (details.row>details.endRow)
@@ -481,9 +482,9 @@ function CellFunctions(figNum) {
     }
     return sum;
   }
-  functionSUM = this.functionSUM;
+  this.functionSUM = functionSUM;
 
-  this.functionAVG = function(details)
+  function functionAVG(details)
   {
     var sum =0;
     var temp =0;
@@ -522,10 +523,11 @@ function CellFunctions(figNum) {
       return 0;
     return sum/count;
   }
-  functionAVG = this.functionAVG;
+  this.functionAVG = functionAVG;
 
   function evaluateTableExpression(expression, selectedCell)
   {
+        console.log(ht);
         //replace all cell names with the values of those cells.
         //And replace SUM and AVG operations with their values.
         var selected = [];
@@ -947,5 +949,6 @@ function CellFunctions(figNum) {
     AE = addElements;
     T = table;
     FP = functionParse;
+    console.log(T);
   }
 }
