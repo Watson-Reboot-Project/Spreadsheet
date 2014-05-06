@@ -6,13 +6,14 @@
  function Table(figNum) {
 
  	/*******************Public Methods***********************/
- 	this.setMeditorManager = setMeditorManager;
- 	this.getMeditorManager = getMeditorManager;
+ 	this.setMEditorManager = setMEditorManager;
+ 	this.getMEditorManager = getMEditorManager;
 
 	 //Note by Mitchell Martin- I'm including the functionality of the input
 	 //box in here too. Input/function boxes are an integral part of spreadsheet
 	 //programs, and they are heavily intertwined.
 	 var ib = $("#functionBox" + figNum);
+	 this.ib = ib;
 	 //for performance purposes, tracks when user has made input so that
 	 //certain update functions can be skipped.
 	 var recentChanges = false; 
@@ -20,22 +21,30 @@
 	 //The way this is used is that the first two dimensions locate the cell which is depended on.
 	 //The second two dimensions are for the dependant cells.
 	 var usedBy = [];
+	 this.usedBy = usedBy;
 	//Creates a 4-dimensional table which stores data for which cells are used by the specified cell.
 	//The first two dimensions locate the dependant cell. The last two represent cells which are
 	//dependencies.
 	var dependantOn =[];
+	this.dependantOn = dependantOn;
 	//Note: for all dependencies, undefined is equivalent to false.
 	//stores data for format
 	var formatArray =[];
+	this.formatArray = formatArray;
 	//This keeps track of which cells are fully updated after changing the value of a cell on which
 	//others are dependant
 	var updateTable = [];
+	this.updateTable = updateTable;
 	//keeps track of whether cells are updating and which cell initiated the update cycle
 	var updateState = [false, 0, 0];
+	this.updateState = updateState;
 	//handles touch events for scrolling at the top and left of the table.
 	var timevert;
 	var timehor;
 	var scrollInterval = 120;
+	
+	var T, ht, AE, CF, FP;
+	T = this;
 	//enumerator for the six types of string formatting
 	formatOption = {
 	  ZERO:0,
@@ -45,6 +54,8 @@
 	  DOLLARS:4,
 	  FNONE:5
 	};
+	this.formatOption = formatOption;
+	formatOption = this.formatOption;
 	//enumerator for the undo/redo tracking array.
 	URTypes = 
 	{
@@ -53,9 +64,10 @@
 	  UNDO:2,
 	  REDO:3
 	};
-	var URArray = [];
-	var URIndex = 0;
-	var URFlag = URTypes.NORMAL;
+	this.URTypes = URTypes;
+	this.URArray = [];
+	this.URIndex = 0;
+	this.URFlag = URTypes.NORMAL;
 	 
 	 ib.bind('input', function(event)
 	 {
@@ -83,6 +95,7 @@
 	//global variables
 	var currSelect = [0,0,0,0];
 	var funcTracker = new Array();
+	this.funcTracker = funcTracker;
 	var meditorManager;
 	var currentEditor;
 	var horDragDealer = 0;
@@ -97,43 +110,38 @@
 	  rowHeaders: true,
 	  colHeaders: true,
 	  outsideClickDeselects: false
-	});
+	}, T);
 
 	//On page load..
 	$(document).ready(function() {
 	  //Default selected cell to 0,0
 	  ht.selectCell(0,0);
 		//set offset for buttons
-		var offset = $("#" + buttonDiv.id).offset();
-		$("#" + buttonDiv.id).offset({top: offset.top+55, left : offset.left});
+		var offset = $("#" + AE.buttonDiv.id).offset();
+		$("#" + AE.buttonDiv.id).offset({top: offset.top+55, left : offset.left});
 		
 		//button listeners
-		$("#" + undoButton.id).click(function() { undo(); });
-		$("#" + redoButton.id).click(function() { redo(); });
-		$("#" + sumButton.id).click(function() { sum(); });
-		$("#" + cutButton.id).click(function() { cut(); });
-		$("#" + copyButton.id).click(function() { copy(); });
-		$("#" + pasteButton.id).click(function() { paste(); });
-		$("#" + clearButton.id).click(function() { clear(); });
-		$("#" + averageButton.id).click(function() { average(); });
-		$("#" + formatButton.id).click(function() { format(); });
-		
-		//Cut event listener
-		$(document).bind('cut', function() {
-			cut();
-		});
+		$("#" + AE.undoButton.id).click(function() { CF.undo(); });
+		$("#" + AE.redoButton.id).click(function() { CF.redo(); });
+		$("#" + AE.sumButton.id).click(function() { CF.sum(); });
+		$("#" + AE.cutButton.id).click(function() { CF.cut(); });
+		$("#" + AE.copyButton.id).click(function() { CF.copy(); });
+		$("#" + AE.pasteButton.id).click(function() { CF.paste(); });
+		$("#" + AE.clearButton.id).click(function() { CF.clear(); });
+		$("#" + AE.averageButton.id).click(function() { CF.average(); });
+		$("#" + AE.formatButton.id).click(function() { CF.format(); });
 		
 		//Listen for any changes to cells.
-		$("#" + tableDiv.id).handsontable({
+		$("#" + AE.tableDiv.id).handsontable({
 			afterChange: function(changes, source) {
-	      if(URFlag == URTypes.NORMAL)
+	      if(T.URFlag == T.URTypes.NORMAL)
 	      {
-	        URArray[URIndex] = {};
-	        URArray[URIndex].type = URTypes.NORMAL;
-	        URIndex++;
-	        URArray = URArray.slice(0,URIndex);
+	        T.URArray[T.URIndex] = {};
+	        T.URArray[T.URIndex].type = T.URTypes.NORMAL;
+	        T.URIndex++;
+	        T.URArray = T.URArray.slice(0,T.URIndex);
 	      }
-	      URFlag = URTypes.NORMAL;
+	      T.URFlag = T.URTypes.NORMAL;
 				var selected = ht.getSelected();
 				var isFunction = false
 				var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
@@ -141,12 +149,12 @@
 	        isFunction = true;
 				/*for(var i = 0; i < funcTracker.length; i++) {
 					if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
-	          changeInput(funcTracker[i].funcString);
+	          CF.changeInput(funcTracker[i].funcString);
 						isFunction = true;
 						break;
 					}*/
 				//After a cell is changed, it needs to notify any cell that depends on it.
-				notifyDependants(changes[0][0], changes[0][1]);
+				CF.notifyDependants(changes[0][0], changes[0][1]);
 				if(updateState[0] && updateState[1] == changes[0][0] && updateState[2] == changes[0][1])
 				{
 	        updateState[0] = false;
@@ -154,18 +162,19 @@
 				else
 	        updateTable[changes[0][0]*ht.countRows()+changes[0][1]] = true;
 				if(isFunction)
-	        changeInput(func.funcString);
+	        CF.changeInput(func.funcString);
 				if(!isFunction)
-				 changeInput(ht.getDataAtCell(selected[0], selected[1]));
+				 CF.changeInput(ht.getDataAtCell(selected[0], selected[1]));
 			}
 		});
 		
 		//Listens for enter key. When detected, prevent the default action (edit cell) and move to a new one
 		//while passing data from function tracking or input.
 		//Mitchell's note- also looking for backspace and delete
-		$("#" + tableDiv.id).handsontable({
+		$("#" + AE.tableDiv.id).handsontable({
 			beforeKeyDown: function(event) {
 	      recentChanges = true;
+	      editor = meditorManager.getActiveEditor();
 	      //enter key
 				if(event.which == 13) {
 					pressEnter(event)
@@ -173,8 +182,8 @@
 				//backspace key
 				if(event.which == 8)
 				{
-					ib.val(currentEditor.TEXTAREA.value+String.fromCharCode(event.which));
-					var caretPosition=currentEditor.wtDom.getCaretPosition(currentEditor.TEXTAREA);
+					ib.val(editor.TEXTAREA.value+String.fromCharCode(event.which));
+					var caretPosition=editor.wtDom.getCaretPosition(editor.TEXTAREA);
 					//This creates substrings of the textbox's text, up to but not including the
 	        //caret (which is deleted) and everything after the caret.
 					ib.val(ib.val().substr(0,caretPosition-1)+ib.val().substr(caretPosition));
@@ -182,8 +191,8 @@
 				//delete key
 				if(event.which == 46)
 				{
-	        ib.val(currentEditor.TEXTAREA.value+String.fromCharCode(event.which));
-					var caretPosition=currentEditor.wtDom.getCaretPosition(currentEditor.TEXTAREA);
+	        ib.val(editor.TEXTAREA.value+String.fromCharCode(event.which));
+					var caretPosition=editor.wtDom.getCaretPosition(editor.TEXTAREA);
 					//This creates substrings of the textbox's text, up to but not including the
 	        //caret (which is deleted) and everything after the caret.
 					ib.val(ib.val().substr(0,caretPosition)+ib.val().substr(caretPosition+1));
@@ -193,20 +202,21 @@
 
 		//handles ASCII keypresses. Specifically, I'm aiming to mirror the cell editor in
 		//the input box.
-		$("#" + tableDiv.id).keypress(function(event)
+		$("#" + AE.tableDiv.id).keypress(function(event)
 		{
 			//IMPORTANT NOTE BY MITCHELL-
 			//The handsontable has no implemented method to access properties of editors.
 			//To make this work, I created a reference to a previously private variable by editing the handsontable.js
 			//file itself. I made a note of where the edit occured- ctrl+f MITCHELLSNOTE
-			ib.val(currentEditor.TEXTAREA.value);
-			var caretPosition=currentEditor.wtDom.getCaretPosition(currentEditor.TEXTAREA);
+			var editor = meditorManager.getActiveEditor();
+			ib.val(editor.TEXTAREA.value);
+			var caretPosition=editor.wtDom.getCaretPosition(editor.TEXTAREA);
 			//copies everything up to and including the caret, adds the character to input box,
 			//then continues along.
 			ib.val(ib.val().substr(0,caretPosition)+String.fromCharCode(event.which)+ib.val().substr(caretPosition));
 		});
 		
-			$("#" + tableDiv.id).handsontable({
+			$("#" + AE.tableDiv.id).handsontable({
 			onValidate: function()
 			{
 	    var selected = ht.getSelected();
@@ -215,7 +225,7 @@
 	    });
 		
 		//Listens for selection changing
-		$("#" + tableDiv.id).handsontable({
+		$("#" + AE.tableDiv.id).handsontable({
 			afterSelection: function(r, c, r2, c2) 
 			{
 	      if(ib.recentlyChanged)
@@ -236,20 +246,20 @@
 	        isFunction = true;
 				/*for(var i = 0; i < funcTracker.length; i++) {
 					if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
-						changeInput(funcTracker[i].funcString);
+						CF.changeInput(funcTracker[i].funcString);
 						isFunction = true;
 						break;
 					}
 				}*/
 	        if(isFunction)
-	          changeInput(func.funcString);
+	          CF.changeInput(func.funcString);
 	        else
-	          changeInput(ht.getDataAtCell(selected[0], selected[1]));
+	          CF.changeInput(ht.getDataAtCell(selected[0], selected[1]));
 	    }
 		});
 
 		//Instructions before setting value into a cell.
-		$("#" + tableDiv.id).handsontable({
+		$("#" + AE.tableDiv.id).handsontable({
 			beforeSet: function e(value)
 			{
 	      var selected = {};
@@ -269,7 +279,7 @@
 	              for(var k = 0; k<=usedBy[selected[0]][selected[1]][i].length; k++)
 	              {
 	                if(usedBy[selected[0]][selected[1]][i][k])
-	                    setUpdateTable(i,k);
+	                    CF.setUpdateTable(i,k);
 	              }
 	          }
 	         }
@@ -289,9 +299,9 @@
 				{
 	        //Since the function string has changed, begin by discarding all cells this cell
 	        //previously depended on.
-	        clearAssociations(selected[0],selected[1]);
-					var details = functionParse(value.value);
-					if(details.function==functionCall.SUM) //deprecated
+	        CF.clearAssociations(selected[0],selected[1]);
+					var details = FP.functionParse(value.value);
+					if(details.function==FP.functionCall.SUM) //deprecated
 					{
 	          var cell = {};
 	          cell.row = value.row;
@@ -301,7 +311,7 @@
 						if(error)
 	            value.value = "#ERROR";
 					}
-					else if(details.function==functionCall.AVG) //deprecated
+					else if(details.function==FP.functionCall.AVG) //deprecated
 					{
 	          var cell = {};
 	          cell.row = value.row;
@@ -311,14 +321,14 @@
 						if(error)
 	            value.value = "#ERROR";
 					}
-					else if(details.function==functionCall.EXPRESSION)
+					else if(details.function==FP.functionCall.EXPRESSION)
 					{
 	          var cell = {};
 	          cell.row = value.row;
 	          cell.col = value.prop;
-	          value.value = evaluateTableExpression(details.row, cell);
+	          value.value = CF.evaluateTableExpression(details.row, cell);
 					}
-	        else if(details.function==functionCall.ERROR)
+	        else if(details.function==FP.functionCall.ERROR)
 	        {
 	          value.value = "#ERROR";
 	        }
@@ -367,7 +377,8 @@
 		//Editor works just as well as typing into the cell itself.
 		//Giving all clicks with cells as the target makes mobile easier to handle.
 		//$('#' + tableDiv.id).on('click', function(evt) {
-	    $('td').click(function(evt) {
+	    //$('td').click(function(evt) {
+	    $("#WatsonTable" + figNum +" td").click(function(evt){
 			var selected = ht.getSelected();
 			if(currSelect!==undefined && selected[0]==selected[2] && selected[1]==selected[3] &&
 			selected[0]==currSelect[0] && selected[1]==currSelect[1])
@@ -375,25 +386,26 @@
 			var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
 			if(func!==undefined)
 			{
-	      currentEditor.setValue(func.funcString);
+	      meditorManager.getActiveEditor().setValue(func.funcString);
 	    }
 			//Deprecated? Need to check during refactoring.
 			currSelect = selected;
 			/* obsolete with the introduction of function strings.
 			if(selected != undefined) {
 				var data = ht.getDataAtCell(selected[0], selected[1]);
-				if(data != null) changeInput(data);
+				if(data != null) CF.changeInput(data);
 			}*/
 		});
-	});
-	  //Some mobile devices do not register mouseup events. Suffice to say, when
+		//Some mobile devices do not register mouseup events. Suffice to say, when
 	  //there is a mousedown event, there must have been a preceding mouseup. This
 	  //makes sure things are in their correct state.
-	  $(document).on("mousedown", function(e)
+	  $("#" + AE.tableDiv.id).on("mousedown", function(e)
 	  {
 	    horDragDealer.dragging = false;
 	    vertDragDealer.dragging = false;
 	  });
+		
+	});
 
 	//Handles functionality of whenever the enter key is pressed. This should be the
 	//same regardless of whether the input field or table is focused.
@@ -426,12 +438,30 @@
 	}
 
 	//Sets the meditormanager global variable
-	function setMeditorManager(value) {
-		setMeditorManager = value;
+	function setMEditorManager(editor) {
+		meditorManager = editor;
 	}
 
 	//Gets the meditormanager global variable
-	function getMeditorManager(value) {
-		return setMeditorManager;
+	this.getCurrentEditor = function() {
+		return currentEditor;
+	}
+	
+	this.setCurrentEditor = function(editor) {
+		currentEditor = editor;
+	}
+
+	//Gets the meditormanager global variable
+	function getMEditorManager() {
+		return meditorManager;
+	}
+	
+	this.getObjects = function(cellFunctions, addElements, functionParse)
+	{
+    if(ht===undefined)
+      ht = cellFunctions.ht;
+    CF = cellFunctions;
+    AE = addElements;
+    FP = functionParse;
 	}
 }

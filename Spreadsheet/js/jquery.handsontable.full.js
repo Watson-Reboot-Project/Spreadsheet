@@ -17,6 +17,7 @@
   * MITNOTEM refers to my notes about mobile development
   */
 /*jslint white: true, browser: true, plusplus: true, indent: 4, maxerr: 50 */
+var externalForward;
 
 var Handsontable = { //class namespace
   extension: {}, //extenstion namespace
@@ -201,7 +202,7 @@ Handsontable.activeGuid = null;
  * @param userSettings
  * @constructor
  */
-Handsontable.Core = function (rootElement, userSettings) {
+Handsontable.Core = function (rootElement, userSettings, EF) {
   var priv
     , datamap
     , grid
@@ -216,6 +217,12 @@ Handsontable.Core = function (rootElement, userSettings) {
   Handsontable.helper.extend(GridSettings.prototype, expandType(userSettings));
 
   this.rootElement = rootElement;
+  //MITCHELLSNOTE:
+  //I've decided that in my programs, I need access to certain parts of handsontable
+  //that are currently only accessible within handsontable.full.js. So, what I'm dong is
+  //optionally passing in a place where externalities can be set through getter and setter
+  //methods.
+  externalForward = EF;
   var $document = $(document.documentElement);
   var $body = $(document.body);
   this.guid = 'ht_' + Handsontable.helper.randomString(); //this is the namespace for global events
@@ -652,7 +659,7 @@ Handsontable.Core = function (rootElement, userSettings) {
       }
       instance.view.render();
       if (selection.isSelected() && !keepEditor) {
-        editorManager.prepareEditor();
+        editorManager.prepareEditor(externalForward);
       }
     },
 
@@ -986,11 +993,12 @@ Handsontable.Core = function (rootElement, userSettings) {
     instance.PluginHooks.run('beforeInit');
 
     this.view = new Handsontable.TableView(this);
-    editorManager = new Handsontable.EditorManager(instance, priv, selection, datamap);
+    editorManager = new Handsontable.EditorManager(instance, priv, selection, datamap, externalForward);
     //MITCHELLSNOTE
     //jquery does not allow access to the editor manager normally,
     //but I would very much like to have it.
-    meditorManager = editorManager;
+    if(externalForward!==undefined)
+      externalForward.setMEditorManager(editorManager);
 
     this.updateSettings(priv.settings, true);
     this.parseSettingsFromDOM();
@@ -1213,7 +1221,6 @@ Handsontable.Core = function (rootElement, userSettings) {
     if (!source && typeof row === "object") {
       source = col;
     }
-
     validateChanges(changes, source, function () {
       applyChanges(changes, source);
     });
@@ -2352,7 +2359,7 @@ DefaultSettings.prototype = {
 };
 Handsontable.DefaultSettings = DefaultSettings;
 
-$.fn.handsontable = function (action) {
+$.fn.handsontable = function (action, externalForward) {
   var i
     , ilen
     , args
@@ -2368,7 +2375,7 @@ $.fn.handsontable = function (action) {
       instance.updateSettings(userSettings);
     }
     else {
-      instance = new Handsontable.Core($this, userSettings);
+      instance = new Handsontable.Core($this, userSettings, externalForward);
       $this.data('handsontable', instance);
       instance.init();
     }
@@ -2906,7 +2913,8 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
 (function(Handsontable){
   'use strict';
 
-  Handsontable.EditorManager = function(instance, priv, selection){
+  Handsontable.EditorManager = function(instance, priv, selection, externalForward){
+    this.externalForward = externalForward;
     var that = this;
     var $document = $(document);
     var keyCodes = Handsontable.helper.keyCode;
@@ -3013,7 +3021,7 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
                 case keyCodes.BACKSPACE:
                 case keyCodes.DELETE:
                   selection.empty(event);
-                  that.prepareEditor();
+                  that.prepareEditor(externalForward);
                   event.preventDefault();
                   break;
 
@@ -3173,13 +3181,13 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
     /**
      * Prepare text input to be displayed at given grid cell
      */
-    this.prepareEditor = function () {
+    this.prepareEditor = function (externalForward) {
 
       if (activeEditor && activeEditor.isWaiting()){
 
         this.closeEditor(false, false, function(dataSaved){
           if(dataSaved){
-            that.prepareEditor();
+            that.prepareEditor(externalForward);
           }
         });
 
@@ -3196,7 +3204,7 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
       var editorClass = instance.getCellEditor(cellProperties);
       activeEditor = Handsontable.editors.getEditor(editorClass, instance);
 
-      activeEditor.prepare(row, col, prop, td, originalValue, cellProperties);
+      activeEditor.prepare(row, col, prop, td, originalValue, cellProperties, externalForward);
 
     };
 
@@ -4692,7 +4700,8 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
     this.state = Handsontable.EditorState.VIRGIN;
 	//MITCHELLSNOTE
-	currentEditor = this;
+	if(externalForward!==undefined)
+    externalForward.setCurrentEditor(this);
 	//MITCHELLSNOTE
   };
 
@@ -9054,7 +9063,6 @@ function Storage(prefix) {
   };
 
   Handsontable.UndoRedo.prototype.done = function (action) {
-    console.log(this.ignoreNewActions);
     if (!this.ignoreNewActions) {
       this.doneActions.push(action);
       this.undoneActions.length = 0;
@@ -13300,8 +13308,8 @@ var Cursor =
 	{
 		if(true)
 		{
-			this.x = e.clientX;
-			this.y = e.clientY;
+			this.x = e.pageX;
+			this.y = e.pageY;
 		}
 		else if(document.body && (e.clientX || e.clientY)) //need to check whether body exists, because of IE8 issue (#1084)
 		{

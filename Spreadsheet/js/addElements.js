@@ -26,10 +26,12 @@ function AddElements(figNum) {
 	tableHolder.style = "overflow: hidden";
 	//Spreadsheet div
 	var tableDiv = document.createElement('div');
+	this.tableDiv = tableDiv;
 	tableDiv.id = "WatsonTable" + figNum;
 
 	//input for cell functions
 	var functionBox = document.createElement('input');
+	this.functionBox = functionBox;
 	functionBox.id = "functionBox" + figNum;
 	functionBox.type = "text";
 	functionBox.name = "Functions";
@@ -41,29 +43,34 @@ function AddElements(figNum) {
 
 	//Div for buttons
 	var buttonDiv = document.createElement('div');
+	this.buttonDiv = buttonDiv;
 	buttonDiv.id = 'buttonDiv' + figNum;
 	buttonDiv.className = "btn-group-vertical col-xs-2 col-md-1 col-md-offset-1 col-xs-offset-1";
 
 	//Buttons
 	var cutButton = document.createElement('button');
+	this.cutButton = cutButton;
 	cutButton.id = "cut" + figNum;
 	cutButton.className = "btn btn-default btn-md btn-primary"
 	cutButton.style.width = "90px";
 	cutButton.innerHTML = "Cut";
 
 	var copyButton = document.createElement('button');
+	this.copyButton = copyButton;
 	copyButton.id = "copy" + figNum;
 	copyButton.className = "btn btn-default btn-md btn-primary"
 	copyButton.style.width = "90px";
 	copyButton.innerHTML = "Copy";
 
 	var pasteButton = document.createElement('button');
+	this.pasteButton = pasteButton;
 	pasteButton.id = "paste" + figNum;
 	pasteButton.className = "btn btn-default btn-md btn-primary"
 	pasteButton.style.width = "90px";
 	pasteButton.innerHTML = "Paste";
 
 	var clearButton = document.createElement('button');
+	this.clearButton = clearButton;
 	clearButton.id = "clear" + figNum;
 	clearButton.className = "btn btn-default btn-md btn-primary"
 	clearButton.style.width = "90px";
@@ -74,12 +81,14 @@ function AddElements(figNum) {
 	sep1.style.width = "90px";
 
 	var undoButton = document.createElement('button');
+	this.undoButton = undoButton;
 	undoButton.id = "undo" + figNum;
 	undoButton.className = "btn btn-default btn-md btn-warning"
 	undoButton.style.width = "90px";
 	undoButton.innerHTML = "Undo";
 
 	var redoButton = document.createElement('button');
+	this.redoButton = redoButton;
 	redoButton.id = "redo" + figNum;
 	redoButton.className = "btn btn-default btn-md btn-warning"
 	redoButton.style.width = "90px";
@@ -90,12 +99,14 @@ function AddElements(figNum) {
 	sep2.style.width = "90px";
 
 	var sumButton = document.createElement('button');
+	this.sumButton = sumButton;
 	sumButton.id = "sum" + figNum;
 	sumButton.className = "btn btn-default btn-md btn-success"
 	sumButton.style.width = "90px";
 	sumButton.innerHTML = "Sum";
 
 	var averageButton = document.createElement('button');
+	this.averageButton = averageButton;
 	averageButton.id = "average" + figNum;
 	averageButton.className = "btn btn-default btn-md btn-success"
 	averageButton.style.width = "90px";
@@ -106,6 +117,7 @@ function AddElements(figNum) {
 	sep3.style.width = "90px";
 
 	var formatButton = document.createElement('button');
+	this.formatButton = formatButton;
 	formatButton.id = "format" + figNum;
 	formatButton.className = "btn btn-default btn-md btn-danger"
 	formatButton.style.width = "90px";

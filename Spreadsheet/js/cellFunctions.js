@@ -4,6 +4,10 @@
 
 function CellFunctions(figNum) {
   var ht = $("#WatsonTable" + figNum).handsontable('getInstance');
+  this.ht = ht;
+  
+  //Related code
+  var AE, T, FP;
 
   var tempCopy;
   var tempSelected;
@@ -16,76 +20,72 @@ function CellFunctions(figNum) {
   var nonabsolute = /[^~\$][A-Z]\d+/;
 
   //Redoes the last undone operation
-  function undo() {
-    URFlag = URTypes.UNDO;
-    if(URIndex<0)
-      URIndex = 0;
-    else if(URArray[URIndex-1]!==undefined){
-    console.log(URArray, URIndex, URArray[URIndex-1]);
-    switch(URArray[URIndex-1].type)
+  this.undo = function() {
+    T.URFlag = T.URTypes.UNDO;
+    if(T.URIndex<0)
+      T.URIndex = 0;
+    else if(T.URArray[T.URIndex-1]!==undefined){
+    switch(T.URArray[T.URIndex-1].type)
     {
-      case URTypes.NORMAL:
-        console.log("hey");
+      case T.URTypes.NORMAL:
         ht.undo();
         break;
-      case URTypes.FUNCTION:
-        var selection = URArray[URIndex-1].selection;
+      case T.URTypes.FUNCTION:
+        var selection = T.URArray[T.URIndex-1].selection;
         //var fillerArray = [];
         for(var i = selection[0]; i<=selection[2]; i++)
         {
           //fillerArray[i-selection[0]] = [];
           for(var k = selection[1]; k<=selection[3]; k++)
           {
-              //if(funcTracker[i*ht.countRows()+k]!==undefined)
-              //  fillerArray[i-selection[0]][k-selection[1]] = funcTracker[i*ht.countRows()+k].funcString;
-              formatArray[i][k].index--;
-              if(formatArray[i][k].index<0)
-                formatArray[i][k].index = 0;
-              if(formatArray[i][k].type[formatArray[i][k].index]===undefined)
-                formatArray[i][k].type[formatArray[i][k].index] = 0;
+              //if(T.funcTracker[i*ht.countRows()+k]!==undefined)
+              //  fillerArray[i-selection[0]][k-selection[1]] = T.funcTracker[i*ht.countRows()+k].funcString;
+              T.formatArray[i][k].index--;
+              if(T.formatArray[i][k].index<0)
+                T.formatArray[i][k].index = 0;
+              if(T.formatArray[i][k].type[T.formatArray[i][k].index]===undefined)
+                T.formatArray[i][k].type[T.formatArray[i][k].index] = 0;
           }
         }
         ht.undo();
         break;
     }
-    URIndex--;
+    T.URIndex--;
     }
   }
 
   //Undoes the last operation
-  function redo() {
-    URFlag = URTypes.REDO;
-    console.log(URArray, URIndex, URArray[URIndex]);
-    if(URArray.length>URIndex)
+  this.redo = function() {
+    T.URFlag = T.URTypes.REDO;
+    if(T.URArray.length>T.URIndex)
     {
-    switch(URArray[URIndex].type)
+    switch(T.URArray[T.URIndex].type)
     {
-        case URTypes.NORMAL:
-          console.log("hey2");
+        case T.URTypes.NORMAL:
           ht.redo();
         break;
-        case URTypes.FUNCTION:
-          var selection = URArray[URIndex].selection;
+        case T.URTypes.FUNCTION:
+          var selection = T.URArray[T.URIndex].selection;
           var fillerArray = [];
           for(var i = selection[0]; i<=selection[2]; i++)
           {
             //fillerArray[i-selection[0]] = [];
             for(var k = selection[1]; k<=selection[3]; k++)
             {
-                //if(funcTracker[i*ht.countRows()+k]!==undefined)
-                //  fillerArray[i-selection[0]][k-selection[1]] = funcTracker[i*ht.countRows()+k].funcString;
-                formatArray[i][k].index++;
+                //if(T.funcTracker[i*ht.countRows()+k]!==undefined)
+                //  fillerArray[i-selection[0]][k-selection[1]] = T.funcTracker[i*ht.countRows()+k].funcString;
+                T.formatArray[i][k].index++;
             }
           }
           ht.redo();
         break;
       }
-      URIndex++;
+      T.URIndex++;
     }
   }
 
   //Handles the sum operation
-  function sum() {
+  this.sum = function() {
   	var selected = ht.getSelected();
   	if(selected != undefined) {
   		var sum = 0;
@@ -104,9 +104,9 @@ function CellFunctions(figNum) {
   		//Inserts sum in cell (if it's below the original selection)
                   //note by Mitchell: robust checking has made the previous condition
                   //obsolete.
-  		$("#" + tableDiv.id).on('click', function() {
+  		$("#" + AE.tableDiv.id).on('click', function() {
   			var clicked = ht.getSelected();
-  				var string = "=SUM(" + funcStrCreator(selected) + ")"
+  				var string = "=SUM(" + funcStrCreator(selected) + ")";
   				ht.setDataAtCell(clicked[0], clicked[1], string);
   				$(this).off('click');
   		});
@@ -114,7 +114,7 @@ function CellFunctions(figNum) {
   }
 
   //Handles the average operation
-  function average() {
+  this.average = function() {
   	var selected = ht.getSelected();
   	if (selected != undefined) {
   	var cells = ht.getData(selected[0], selected[1], selected[2], selected[3]);
@@ -134,7 +134,7 @@ function CellFunctions(figNum) {
   		ht.deselectCell();
   		
   		//Inserts average in cell if it's below the original selection
-  		$("#" + tableDiv.id).on('click', function() {
+  		$("#" + AE.tableDiv.id).on('click', function() {
   			var clicked = ht.getSelected();
   				var string = "=AVG(" + funcStrCreator(selected) + ")";
   				ht.setDataAtCell(clicked[0], clicked[1], string);
@@ -143,14 +143,14 @@ function CellFunctions(figNum) {
   	}
   }
 
-  function format()
+  this.format = function()
   {
     var selected = ht.getSelected();
-    URFlag = URTypes.FUNCTION;
-    URArray[URIndex] = {};
-    URArray[URIndex].type = URTypes.FUNCTION;
-    URArray[URIndex].selection = selected;
-    URIndex++;
+    T.URFlag = T.URTypes.FUNCTION;
+    T.URArray[T.URIndex] = {};
+    T.URArray[T.URIndex].type = T.URTypes.FUNCTION;
+    T.URArray[T.URIndex].selection = selected;
+    T.URIndex++;
   	if (selected != undefined)
   	{
         if(selected[0]<selected[2])
@@ -176,7 +176,7 @@ function CellFunctions(figNum) {
   	}
   	var options = ["No Format", "1", "1.0", "1.00", "1.000", "$1.00"];
   	var choice;
-  	var div = document.getElementById("container");
+  	var div = document.getElementById("container"+figNum);
   	var sel = new Selector();
   	sel.open("Format Number", options, function(selection)
   {
@@ -184,49 +184,49 @@ function CellFunctions(figNum) {
       if(selection!==null)
       {
         if (selection.indexOf("$1.00")>=0)
-          choice = formatOption.DOLLARS;
+          choice = T.formatOption.DOLLARS;
         else if(selection.indexOf("1.000")>=0)
-          choice = formatOption.THREE;
+          choice = T.formatOption.THREE;
         else if(selection.indexOf("1.00")>=0)
-          choice = formatOption.TWO;
+          choice = T.formatOption.TWO;
         else if(selection.indexOf("1.0")>=0)
-          choice = formatOption.ONE;
+          choice = T.formatOption.ONE;
         else if(selection.indexOf("1")>=0)
-          choice = formatOption.ZERO;
+          choice = T.formatOption.ZERO;
         else if(selection.indexOf("No Format")>=0)
-          choice = formatOption.FNONE;
+          choice = T.formatOption.FNONE;
         for(var i = row; i <= endRow; i++)
         {
-          if(formatArray[i]===undefined)
-            formatArray[i] = [];
+          if(T.formatArray[i]===undefined)
+            T.formatArray[i] = [];
           fillerArray[i-row] = [];
           for(var k = col; k <= endCol; k++)
           {
-            if(formatArray[i][k] ===undefined)
+            if(T.formatArray[i][k] ===undefined)
             {
-              formatArray[i][k] ={};
-              formatArray[i][k].index =0;
-              formatArray[i][k].type = [0];
+              T.formatArray[i][k] ={};
+              T.formatArray[i][k].index =0;
+              T.formatArray[i][k].type = [0];
               
             }
-            formatArray[i][k].index++;
-            var index = formatArray[i][k].index;
-            formatArray[i][k].type[index] = choice;
+            T.formatArray[i][k].index++;
+            var index = T.formatArray[i][k].index;
+            T.formatArray[i][k].type[index] = choice;
             
-            if(funcTracker[i*ht.countRows()+k]!==undefined)
+            if(T.funcTracker[i*ht.countRows()+k]!==undefined)
             {
-              fillerArray[i-row][k-col] = funcTracker[i*ht.countRows()+k].funcString;
-              //ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+              fillerArray[i-row][k-col] = T.funcTracker[i*ht.countRows()+k].funcString;
+              //ht.setDataAtCell(i, k, T.funcTracker[i*ht.countRows()+k].funcString);
             }
           }
         }
+        ht.populateFromArray(selected[0], selected[1], fillerArray, selected[2], selected[3]);
       }
-      ht.populateFromArray(selected[0], selected[1], fillerArray, selected[2], selected[3]);
   }, div);
   }
 
   //Handles the cut operation
-  function cut()
+  this.cut = function()
   {
   		fillTempCopy();
       var selected = topLeft(ht.getSelected());
@@ -235,14 +235,14 @@ function CellFunctions(figNum) {
   }
 
   //Handles the copy operation
-  function copy()
+  this.copy = function()
   {
       //fill tempCopy with an array of the functionStrings of the selected index.
   		fillTempCopy();
   }
 
   //Handles the paste operation
-  function paste() {
+  this.paste = function() {
   	var selected = ht.getSelected();
   	if(tempCopy!== undefined)
   	{
@@ -262,7 +262,7 @@ function CellFunctions(figNum) {
   }
 
   //Handles the clear operation
-  function clear() {
+  this.clear =  function() {
   	var selected = topLeft(ht.getSelected());
   	var data = ht.getData(selected[0], selected[1], selected[2], selected[3]);
   	if(selected != undefined)
@@ -273,7 +273,7 @@ function CellFunctions(figNum) {
   }
 
   //Returns a selection in format [top, left, bottom, right]
-  function topLeft(selected) {
+  this.topLeft = function(selected) {
   	if(selected != undefined) {
   		var newSelect = [0,0,0,0];
   		if(selected[0] < selected[2]) {
@@ -295,73 +295,75 @@ function CellFunctions(figNum) {
   		return newSelect;
   	}
   }
+  topLeft = this.topLeft;
 
   //Changes text in intput bar
-  function changeInput(text) {
-    if(!(ib.is(":focus")))
+  this.changeInput = function(text) {
+    if(!(T.ib.is(":focus")))
     {
-      $("#" + functionBox.id).val(text);
+      $("#" + AE.functionBox.id).val(text);
     }
   }
 
   //Keeps track of all function cells (Cells with =SUM() or =AVG())
-  function cellFunction(row, col, funcString) {
+  this.cellFunction = function(row, col, funcString) {
   	this.row = row;
   	this.col = col;
   	this.funcString = funcString;
   }
 
-  function setUpdateTable(row, col)
+  this.setUpdateTable = function(row, col)
   {
-    updateTable[ht.countRows()*row+col] = false;
-    if(usedBy[row]!==undefined && usedBy[row][col]!==undefined)
+    T.updateTable[ht.countRows()*row+col] = false;
+    if(T.usedBy[row]!==undefined && T.usedBy[row][col]!==undefined)
     {
-      for(var i = 0; i<=usedBy[row][col].length; i++)
+      for(var i = 0; i<=T.usedBy[row][col].length; i++)
       {
-        if(usedBy[row][col][i]!==undefined)
+        if(T.usedBy[row][col][i]!==undefined)
         {
-          for(var k = 0; k<=usedBy[row][col][i].length; k++)
+          for(var k = 0; k<=T.usedBy[row][col][i].length; k++)
           {
             //only update if the value is not exactly false.
             //if the value is false, then we've got a recursive statement.
             //if the value is undefined, se it.
-            if(updateTable[ht.countRows()*i+k]!==false)
+            if(T.updateTable[ht.countRows()*i+k]!==false)
               setUpdateTable(i, k);
           }
         }
       }
     }
   }
+  setUpdateTable = this.setUpdateTable;
 
   //takes coordinates for a selection and a specified cell, and marks all
   //cells within the range specified in details as used by cell
-  function updateDependencyArrays(row, col, endRow, endCol, cellRow, cellCol)
+  this.updateDependencyArrays = function(row, col, endRow, endCol, cellRow, cellCol)
   {
     var error = false;
     for (var i=row; i<=endRow; i++)
     {
-      if(usedBy[i]===undefined)
-        usedBy[i] = [];
-      if(dependantOn[cellRow]===undefined)
-        dependantOn[cellRow] = [];
+      if(T.usedBy[i]===undefined)
+        T.usedBy[i] = [];
+      if(T.dependantOn[cellRow]===undefined)
+        T.dependantOn[cellRow] = [];
       for(var k=col; k<=endCol; k++)
       {
-        if(usedBy[i][k]===undefined)
-          usedBy[i][k] = [];
-        if(dependantOn[cellRow][cellCol]===undefined)
-          dependantOn[cellRow][cellCol] = [];
-        if(usedBy[i][k][cellRow]===undefined)
-          usedBy[i][k][cellRow] = [];
-        if(dependantOn[cellRow][cellCol][i]===undefined)
-          dependantOn[cellRow][cellCol][i] = [];
-        usedBy[i][k][cellRow][cellCol] = true;
-        dependantOn[cellRow][cellCol][i][k] = true;
-        //check for circular dependency. dependantOn[cellRow][cellCol][i][k]
-        //is known to be true. If dependantOn[i][k][cellCol][cellRow] is also true,
+        if(T.usedBy[i][k]===undefined)
+          T.usedBy[i][k] = [];
+        if(T.dependantOn[cellRow][cellCol]===undefined)
+          T.dependantOn[cellRow][cellCol] = [];
+        if(T.usedBy[i][k][cellRow]===undefined)
+          T.usedBy[i][k][cellRow] = [];
+        if(T.dependantOn[cellRow][cellCol][i]===undefined)
+          T.dependantOn[cellRow][cellCol][i] = [];
+        T.usedBy[i][k][cellRow][cellCol] = true;
+        T.dependantOn[cellRow][cellCol][i][k] = true;
+        //check for circular dependency. T.dependantOn[cellRow][cellCol][i][k]
+        //is known to be true. If T.dependantOn[i][k][cellCol][cellRow] is also true,
         //then a circular dependancy has been found.
-        if(dependantOn[i]!==undefined && dependantOn[i][k]!==undefined && 
-        dependantOn[i][k][cellRow]!==undefined &&
-        dependantOn[i][k][cellRow][cellCol]!==undefined && dependantOn[i][k][cellRow][cellCol])
+        if(T.dependantOn[i]!==undefined && T.dependantOn[i][k]!==undefined && 
+        T.dependantOn[i][k][cellRow]!==undefined &&
+        T.dependantOn[i][k][cellRow][cellCol]!==undefined && T.dependantOn[i][k][cellRow][cellCol])
         {
           error = true;
         }
@@ -369,41 +371,43 @@ function CellFunctions(figNum) {
     }
     return error;
   }
+  updateDependencyArrays = this.updateDependencyArrays;
 
   //Convenience function that allows for a much smaller signature of updateDependencyArrays()
-  function updateDependencyByDetails(details, cell)
+  this.updateDependencyByDetails = function(details, cell)
   {
     return updateDependencyArrays(details.row, details.col, details.endRow, details.endCol, cell.row, cell.col);
   }
+  updateDependencyByDetails = this.updateDependencyByDetails;
 
   //sets the value of all dependant cells
-  function notifyDependants(row, col)
+  this.notifyDependants = function(row, col)
   {
     //Cycle through cells and search for dependant cells.
-    if(usedBy[row]!== undefined && usedBy[row][col]!==undefined)
+    if(T.usedBy[row]!== undefined && T.usedBy[row][col]!==undefined)
     {
-      for(var i=0; i<=usedBy[row][col].length; i++)
+      for(var i=0; i<=T.usedBy[row][col].length; i++)
       {
-        if(usedBy[row][col][i]!==undefined)
+        if(T.usedBy[row][col][i]!==undefined)
         {
-          for(var k=0; k<=usedBy[row][col][i].length; k++)
+          for(var k=0; k<=T.usedBy[row][col][i].length; k++)
           {
-            //if updateTable[index] is true then the cell is completely up-to-date.
+            //if T.updateTable[index] is true then the cell is completely up-to-date.
             //if false then update it.
             //if it is null, then there is a circular reference.
-            if(usedBy[row][col][i][k] && updateTable[i*ht.countRows()+k]!==null)
+            if(T.usedBy[row][col][i][k] && T.updateTable[i*ht.countRows()+k]!==null)
             {
-              updateTable[i*ht.countRows()+k] = null;
-              if(usedBy[i]===undefined || usedBy[i][k]===undefined ||
-              usedBy[i][k][row]===undefined || !usedBy[i][k][row][col])
-                ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+              T.updateTable[i*ht.countRows()+k] = null;
+              if(T.usedBy[i]===undefined || T.usedBy[i][k]===undefined ||
+              T.usedBy[i][k][row]===undefined || !T.usedBy[i][k][row][col])
+                ht.setDataAtCell(i, k, T.funcTracker[i*ht.countRows()+k].funcString);
             }
             //outdated after the introduction of updated cell tracking
-            /*else if(usedBy[row][col][i][k] && !debug)
+            /*else if(T.usedBy[row][col][i][k] && !debug)
             {
-              if(usedBy[i]===undefined || usedBy[i][k]===undefined ||
-              usedBy[i][k][row]===undefined || !usedBy[i][k][row][col])
-                ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+              if(T.usedBy[i]===undefined || T.usedBy[i][k]===undefined ||
+              T.usedBy[i][k][row]===undefined || !T.usedBy[i][k][row][col])
+                ht.setDataAtCell(i, k, T.funcTracker[i*ht.countRows()+k].funcString);
             }*/
           }
         }
@@ -414,30 +418,31 @@ function CellFunctions(figNum) {
   //Called whenever the function string of a cell is reevaluated.
   //Removes references to cells that the specified cell is dependant on.
   //Does not clear references by cells that are dependant on the specified cell.
-  function clearAssociations(row, col)
+  this.clearAssociations = function(row, col)
   {
     //check to see if cell is dependant on anything
-    if(dependantOn[row]!== undefined && dependantOn[row][col]!==undefined)
+    if(T.dependantOn[row]!== undefined && T.dependantOn[row][col]!==undefined)
     {
       //cycle through and remove dependancies
-      for(var i= 0; i<dependantOn[row][col].length; i++)
+      for(var i= 0; i<T.dependantOn[row][col].length; i++)
       {
-        if(dependantOn[row][col][i]!==undefined)
+        if(T.dependantOn[row][col][i]!==undefined)
         {
-          for(var k=0; k<dependantOn[row][col][i].length; k++)
+          for(var k=0; k<T.dependantOn[row][col][i].length; k++)
           {
-            if(dependantOn[row][col][i][k]==true)
+            if(T.dependantOn[row][col][i][k]==true)
             {
-              dependantOn[row][col][i][k] = false;
-              usedBy[i][k][row][col] = false;
+              T.dependantOn[row][col][i][k] = false;
+              T.usedBy[i][k][row][col] = false;
             }
           }
         }
       }
     }
   }
+  clearAssociations = this.clearAssociations;
 
-  function functionSUM(details)
+  this.functionSUM = function(details)
   {
     var sum = 0;
     var temp = 0;
@@ -476,8 +481,9 @@ function CellFunctions(figNum) {
     }
     return sum;
   }
+  functionSUM = this.functionSUM;
 
-  function functionAVG(details)
+  this.functionAVG = function(details)
   {
     var sum =0;
     var temp =0;
@@ -512,8 +518,11 @@ function CellFunctions(figNum) {
         }
       }
     }
+    if(count==0)
+      return 0;
     return sum/count;
   }
+  functionAVG = this.functionAVG;
 
   function evaluateTableExpression(expression, selectedCell)
   {
@@ -526,7 +535,7 @@ function CellFunctions(figNum) {
         expression = expression.replace(/\$/g,'');
         expression = expression.replace(/ /g,'');
         expression = expression.toUpperCase();
-        var SUMAVG = expression.match(SUMAVGRE);
+        var SUMAVG = expression.match(FP.SUMAVGRE);
         var saGet = false;
         if(SUMAVG!==null)
           var saGet= true;
@@ -541,13 +550,13 @@ function CellFunctions(figNum) {
           //remember portion after.
           expressionEnd = expression.substr(SUMAVG.index+SUMAVG[0].length);
           //Get beginning of cell range from SUM or AVG function
-          cellNames = SUMAVG[0].match(cellRE);
-          var cellRow = getRowFromNumber(cellNames[0].substr(1));
-          var cellCol = getColFromChar(cellNames[0].charAt(0));
+          cellNames = SUMAVG[0].match(FP.cellRE);
+          var cellRow = FP.getRowFromNumber(cellNames[0].substr(1));
+          var cellCol = FP.getColFromChar(cellNames[0].charAt(0));
           //Get end of cell range
-          cellNames = SUMAVG[0].substr(SUMAVG[0].indexOf(":")).match(cellRE);
-          var cellRow2 = getRowFromNumber(cellNames[0].substr(1));
-          var cellCol2 = getColFromChar(cellNames[0].charAt(0));
+          cellNames = SUMAVG[0].substr(SUMAVG[0].indexOf(":")).match(FP.cellRE);
+          var cellRow2 = FP.getRowFromNumber(cellNames[0].substr(1));
+          var cellCol2 = FP.getColFromChar(cellNames[0].charAt(0));
           //before performing the final sum, loop through the sum/average
           //range and update cells that are not updated already.
           var temp;
@@ -567,10 +576,10 @@ function CellFunctions(figNum) {
           {
             for(var k = cellCol; k<=cellCol2; k++)
             {
-              if(updateTable[i*ht.countRows()+k]===false)
+              if(T.updateTable[i*ht.countRows()+k]===false)
               {
-                updateTable[i*ht.countRows()+k] = null;
-                ht.setDataAtCell(i, k, funcTracker[i*ht.countRows()+k].funcString);
+                T.updateTable[i*ht.countRows()+k] = null;
+                ht.setDataAtCell(i, k, T.funcTracker[i*ht.countRows()+k].funcString);
               }
               
             }
@@ -594,12 +603,12 @@ function CellFunctions(figNum) {
           }
           else
           {
-              SUMAVG = expression.match(SUMAVGRE);
+              SUMAVG = expression.match(FP.SUMAVGRE);
               if(SUMAVG!==null)
                 var saGet= true;
           }
         }
-        var cellNames = expression.match(cellRE);
+        var cellNames = expression.match(FP.cellRE);
         var cellGet = false;
         if(cellNames!==null)
           cellGet = true;
@@ -609,8 +618,8 @@ function CellFunctions(figNum) {
             var expressionStart;
             var expressionEnd;
             var insert;
-            var cellRow = getRowFromNumber(cellNames[0].substr(1));
-            var cellCol = getColFromChar(cellNames[0].charAt(0));
+            var cellRow = FP.getRowFromNumber(cellNames[0].substr(1));
+            var cellCol = FP.getColFromChar(cellNames[0].charAt(0));
             //remember portion of expression before cell name.
             expressionStart = expression.substr(0,cellNames.index);
             //remember portion after.
@@ -631,16 +640,16 @@ function CellFunctions(figNum) {
             //failed) but cannot do so within a block. Thus, the default behavior
             //is to set cellNames to null and define it if there are no errors.
             cellGet = false;
-            if(updateTable[cellRow*ht.countRows()+cellCol]===false)
+            if(T.updateTable[cellRow*ht.countRows()+cellCol]===false)
             {
-                  updateTable[cellRow*ht.countRows()+cellCol] = null;
-                  ht.setDataAtCell(cellRow, cellCol, funcTracker[cellRow*ht.countRows()+cellCol].funcString);
+                  T.updateTable[cellRow*ht.countRows()+cellCol] = null;
+                  ht.setDataAtCell(cellRow, cellCol, T.funcTracker[cellRow*ht.countRows()+cellCol].funcString);
             }
             //circular dependancy
-            if(dependantOn[cellRow]!==undefined && dependantOn[cellRow][cellCol]!==undefined && 
-            dependantOn[cellRow][cellCol][selected[0]]!==undefined &&
-            dependantOn[cellRow][cellCol][selected[0]][selected[1]]!==undefined &&
-            dependantOn[cellRow][cellCol][selected[0]][selected[1]])
+            if(T.dependantOn[cellRow]!==undefined && T.dependantOn[cellRow][cellCol]!==undefined && 
+            T.dependantOn[cellRow][cellCol][selected[0]]!==undefined &&
+            T.dependantOn[cellRow][cellCol][selected[0]][selected[1]]!==undefined &&
+            T.dependantOn[cellRow][cellCol][selected[0]][selected[1]])
             {
               return "#ERROR";
             }
@@ -652,7 +661,7 @@ function CellFunctions(figNum) {
             else
             {
                 //no circular dependencies
-                cellNames = expression.match(cellRE);
+                cellNames = expression.match(FP.cellRE);
                 if(cellNames!==null)
                   cellGet = true;
             }
@@ -664,6 +673,7 @@ function CellFunctions(figNum) {
         else
           return eval(expression).toString();
   }
+  this.evaluateTableExpression = evaluateTableExpression;
 
 
   function funcStrCreator(selection) {
@@ -699,28 +709,28 @@ function CellFunctions(figNum) {
   	return allNull;
   }
 
-  //Fills an element of the table usedBy, ensuring that
+  //Fills an element of the table T.usedBy, ensuring that
   //each dimension of the table is defined
   function fillUsedBy(row1, col1, row2, col2, value)
   {
-    if(usedBy[row1]===undefined)
-      usedBy[row1] =[];
-    if(usedBy[row1][col1]===undefined)
-      usedBy[row1][col1] =[];
-    if(usedBy[row1][col1][row2]===undefined)
-      usedBy[row1][col1][row2] =[];
-    usedBy[row1][col1][row2][col2] = value;
+    if(T.usedBy[row1]===undefined)
+      T.usedBy[row1] =[];
+    if(T.usedBy[row1][col1]===undefined)
+      T.usedBy[row1][col1] =[];
+    if(T.usedBy[row1][col1][row2]===undefined)
+      T.usedBy[row1][col1][row2] =[];
+    T.usedBy[row1][col1][row2][col2] = value;
   }
 
   function fillDependantOn(row1, col1, row2, col2, value)
   {
-    if(dependantOn[row1]===undefined)
-      dependantOn[row1] =[];
-    if(dependantOn[row1][col1]===undefined)
-      dependantOn[row1][col1] =[];
-    if(dependantOn[row1][col1][row2]===undefined)
-      dependantOn[row1][col1][row2] =[];
-    dependantOn[row1][col1][row2][col2] = value;
+    if(T.dependantOn[row1]===undefined)
+      T.dependantOn[row1] =[];
+    if(T.dependantOn[row1][col1]===undefined)
+      T.dependantOn[row1][col1] =[];
+    if(T.dependantOn[row1][col1][row2]===undefined)
+      T.dependantOn[row1][col1][row2] =[];
+    T.dependantOn[row1][col1][row2][col2] = value;
   }
 
   //generates the tempCopy and tempSelcted from the currently selected section of cells.
@@ -752,8 +762,8 @@ function CellFunctions(figNum) {
           countk = 0;
           for(var k = tempSelected[1]; k<=tempSelected[3]; k++)
           {
-              if(funcTracker[i*ht.countRows()+k]!==undefined)
-              tempCopy[counti][countk] = funcTracker[i*ht.countRows()+k].funcString;
+              if(T.funcTracker[i*ht.countRows()+k]!==undefined)
+              tempCopy[counti][countk] = T.funcTracker[i*ht.countRows()+k].funcString;
               //if the function string was undefined, set to empty string so
               //it will be treated as a string.
               else
@@ -884,8 +894,8 @@ function CellFunctions(figNum) {
         {
           FSStart = oldFS.substr(0,regex.index);
           FSEnd = oldFS.substr(regex.index+regex[0].length);
-          modifiedRow = (getRowFromNumber(regex[0].substr(4))+1).toString();
-          modifiedCol = String.fromCharCode(getColFromChar(regex[0].substr(2,1))+65);
+          modifiedRow = (FP.getRowFromNumber(regex[0].substr(4))+1).toString();
+          modifiedCol = String.fromCharCode(FP.getColFromChar(regex[0].substr(2,1))+65);
           insert = oldFS.charAt(regex.index)+"~"+"$"+modifiedCol+"$"+modifiedRow;
           oldFS = FSStart+insert+FSEnd;
           regex = oldFs.match(absolute);
@@ -895,8 +905,8 @@ function CellFunctions(figNum) {
         {
           FSStart = oldFS.substr(0,regex.index);
           FSEnd = oldFS.substr(regex.index+regex[0].length);
-          modifiedRow = (getRowFromNumber(regex[0].substr(3))+1).toString();
-          modifiedCol = String.fromCharCode(getColFromChar(regex[0].substr(1,1))+65+colDif);
+          modifiedRow = (FP.getRowFromNumber(regex[0].substr(3))+1).toString();
+          modifiedCol = String.fromCharCode(FP.getColFromChar(regex[0].substr(1,1))+65+colDif);
           insert = oldFS.charAt(regex.index)+"~"+modifiedCol+"$"+modifiedRow;
           oldFS = FSStart+insert+FSEnd;
           regex = oldFS.match(absoluteRow);
@@ -911,8 +921,8 @@ function CellFunctions(figNum) {
         {
           FSStart = oldFS.substr(0,regex.index);
           FSEnd = oldFS.substr(regex.index+regex[0].length);
-          modifiedRow = (getRowFromNumber(regex[0].substr(3))+rowDif+1).toString();
-          modifiedCol = String.fromCharCode(getColFromChar(regex[0].substr(2,1))+65);
+          modifiedRow = (FP.getRowFromNumber(regex[0].substr(3))+rowDif+1).toString();
+          modifiedCol = String.fromCharCode(FP.getColFromChar(regex[0].substr(2,1))+65);
           insert = oldFS.charAt(regex.index)+"~"+"$"+modifiedCol+modifiedRow;
           oldFS = FSStart+insert+FSEnd;
           regex = oldFS.match(absoluteCol);
@@ -922,8 +932,8 @@ function CellFunctions(figNum) {
         {
           FSStart = oldFS.substr(0,regex.index);
           FSEnd = oldFS.substr(regex.index+regex[0].length);
-          modifiedRow = (getRowFromNumber(regex[0].substr(2))+rowDif+1).toString();
-          modifiedCol = String.fromCharCode(getColFromChar(regex[0].substr(1,1))+colDif+65);
+          modifiedRow = (FP.getRowFromNumber(regex[0].substr(2))+rowDif+1).toString();
+          modifiedCol = String.fromCharCode(FP.getColFromChar(regex[0].substr(1,1))+colDif+65);
           insert = oldFS.charAt(regex.index)+"~"+modifiedCol+modifiedRow;
           oldFS = FSStart+insert+FSEnd;
           regex = oldFS.match(nonabsolute);
@@ -931,5 +941,11 @@ function CellFunctions(figNum) {
         oldFS = oldFS.replace(/~/g, '');
       }
       return oldFS;
+  }
+  this.getObjects = function(addElements, table, functionParse)
+  {
+    AE = addElements;
+    T = table;
+    FP = functionParse;
   }
 }

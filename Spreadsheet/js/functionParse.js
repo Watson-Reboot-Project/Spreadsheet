@@ -2,7 +2,7 @@
  * This handles checking if a cell value is a function string or not
  * Author: Mitchell Martin
  */
-function FunctionParse(figNum) {
+this.FunctionParse = function(figNum) {
 	function parseDetails()
 	{
 		this.function = functionCall.NONE;
@@ -19,8 +19,11 @@ function FunctionParse(figNum) {
 	// 
 	//regular expression to determine if a string is a cell name.
 	var cellRE = /[A-Z][\d]+/;
+	this.cellRE = cellRE;
 	var SUMAVGRE = /(SUM|AVG)\([A-Z]\d+:[A-Z]\d+\)/;
+	this.SUMAVGRE = SUMAVGRE;
 	var innerParenthesis = /\([^\(\)]+\)/;
+	this.innerParenthesis = innerParenthesis;
 
 	functionCall = { 
 		SUM:0, //deprecated, all functions are handled implicitly through expressions
@@ -28,8 +31,9 @@ function FunctionParse(figNum) {
 		EXPRESSION:2,
 		NONE:3,
 		ERROR:4       };
+		this.functionCall = functionCall;
 
-	function functionParse(functionString)
+	this.functionParse = function(functionString)
 	{
 		var details = new parseDetails();
 		//Check if first character is equal. If so, parse function
@@ -115,23 +119,25 @@ function FunctionParse(figNum) {
 		return details;
 	}
 
-	function getRowFromNumber(numberString)
+	this.getRowFromNumber = function(numberString)
 	{
 	  return parseInt(numberString)-1;
 	}
+	getRowFromNumber = this.getRowFromNumber;
 
-	function getColFromChar(character)
+	this.getColFromChar = function(character)
 	{
 	  return character.charCodeAt(0)-65;
 	}
+	getColFromChar = this.getColFromChar;
 
-	function handleInvalidInput(token)
+	this.handleInvalidInput = function(token)
 	{
 		console.log("Invalid input");
 	}
 
 	//takes a string and attempts to match all expressions inside of parenthesis.
-	function substituteParenthesis(input)
+	this.substituteParenthesis = function(input)
 	{
 	  var substring = input.match(SUMAVGRE);
 	  //assume all sum and average functions are valid expressions
@@ -162,4 +168,5 @@ function FunctionParse(figNum) {
 	  }
 	  return input;
 	}
+	substituteParenthesis = this.substituteParenthesis;
 }
