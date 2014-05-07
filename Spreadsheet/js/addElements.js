@@ -145,6 +145,17 @@ function AddElements(figNum) {
 	var container = document.getElementById("container" + figNum);
 	container.appendChild(functionBox);
 	container.appendChild(row_1);
+	
+	switch(figNum)
+	{
+    case 3:
+      console.log(buttonDiv);
+      buttonDiv.style.display = "none";
+      functionBox.style.display = "none";
+      break;
+    default:
+      break;
+	}
 }
 
 

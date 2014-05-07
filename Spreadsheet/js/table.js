@@ -99,13 +99,34 @@
 	var currentEditor;
 	var horDragDealer = 0;
 	var vertDragDealer = 0;
+	
+	var minRow, maxRow, minCol, maxCol, tableHeight;
+	var DEFAULTHEIGHT = 500;
+	switch(figNum)
+	{
+    case 3:
+      minRow = 8;
+      maxRow = 8;
+      minCol = 4;
+      maxCol = 4;
+      tableHeight = 300;
+      break;
+    default:
+      //sandbox mode
+      minRow = 30;
+      minCol = 20;
+      maxRow = 30;
+      maxCol = 20;
+      tableHeight = DEFAULTHEIGHT;
+      break;
+	}
 
 	$("#WatsonTable" + figNum).handsontable({
-	  minSpareRows: 30,
-	  minSpareCols: 20,
-	  maxRows: 30,
-	  maxCols: 20,
-	  height: 500,
+	  minSpareRows: minRow,
+	  minSpareCols: minCol,
+	  maxRows: maxRow,
+	  maxCols: maxCol,
+	  height: tableHeight,
 	  rowHeaders: true,
 	  colHeaders: true,
 	  outsideClickDeselects: false
@@ -402,7 +423,24 @@
 	    horDragDealer.dragging = false;
 	    vertDragDealer.dragging = false;
 	  });
-		
+	  
+	  switch(figNum)
+	  {
+      case 3:
+        var fillerArray = [];
+        fillerArray[0] = []; fillerArray[4] = [];
+        fillerArray[1] = [];
+        fillerArray[1][1] = "Grades";
+        fillerArray[1][2] = "50";
+        fillerArray[2] = []; fillerArray[2][2] = "100";
+        fillerArray[3] = []; fillerArray[3][2] = "75";
+        fillerArray[5] = []; fillerArray[5][1] = "Average"; fillerArray[5][2] = "=AVG(C2:C4)";
+        console.log(fillerArray);
+        ht.populateFromArray(0,0, fillerArray,5,2);
+        break;
+      default:
+        break;
+	  }
 	});
 
 	//Handles functionality of whenever the enter key is pressed. This should be the

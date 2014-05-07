@@ -37,6 +37,7 @@ this.FunctionParse = function(figNum) {
 	{
 		var details = new parseDetails();
 		//Check if first character is equal. If so, parse function
+		console.log(functionString);
 		if(functionString!==undefined && functionString!==null && functionString.charAt(0)=='=')
 		{
 			//if(functionString.indexOf("SUM")==1) //deprecated
