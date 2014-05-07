@@ -22,8 +22,7 @@ function AddElements(figNum) {
 
 	//Div to restrict with of spreadsheet
 	var tableHolder = document.createElement('div');
-	tableHolder.className = "col-md-8 col-xs-9 tableHolder";
-	tableHolder.style = "overflow: hidden";
+	tableHolder.className = "col-md-7 col-xs-6 tableHolder";
 	//Spreadsheet div
 	var tableDiv = document.createElement('div');
 	this.tableDiv = tableDiv;
@@ -35,7 +34,7 @@ function AddElements(figNum) {
 	functionBox.id = "functionBox" + figNum;
 	functionBox.type = "text";
 	functionBox.name = "Functions";
-	functionBox.className = "input-group col-md-8 col-xs-9";
+	functionBox.className = "input-group col-md-7 col-xs-6";
 
 	// moves bootstrap to next row
 	var cfDiv = document.createElement('div');
@@ -45,7 +44,7 @@ function AddElements(figNum) {
 	var buttonDiv = document.createElement('div');
 	this.buttonDiv = buttonDiv;
 	buttonDiv.id = 'buttonDiv' + figNum;
-	buttonDiv.className = "btn-group-vertical col-xs-2 col-md-1 col-md-offset-1 col-xs-offset-1";
+	buttonDiv.className = "btn-group-vertical col-xs-2 col-md-2 col-md-offset-1 col-xs-offset-1";
 
 	//Buttons
 	var cutButton = document.createElement('button');

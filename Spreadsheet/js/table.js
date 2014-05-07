@@ -43,7 +43,6 @@
 	
 	var T, ht, AE, CF, FP;
 	T = this;
-	console.log(T);
 	//enumerator for the six types of string formatting
 	formatOption = {
 	  ZERO:0,
@@ -369,7 +368,6 @@
 	          }
 	        }
 				}
-				console.log(T.usedBy);
 			}
 		});
 		

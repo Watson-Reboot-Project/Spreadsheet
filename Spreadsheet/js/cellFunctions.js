@@ -444,7 +444,6 @@ function CellFunctions(figNum) {
 
   function functionSUM(details)
   {
-    console.log(ht);
     var sum = 0;
     var temp = 0;
     if (details.row>details.endRow)
@@ -527,7 +526,6 @@ function CellFunctions(figNum) {
 
   function evaluateTableExpression(expression, selectedCell)
   {
-        console.log(ht);
         //replace all cell names with the values of those cells.
         //And replace SUM and AVG operations with their values.
         var selected = [];
@@ -949,6 +947,5 @@ function CellFunctions(figNum) {
     AE = addElements;
     T = table;
     FP = functionParse;
-    console.log(T);
   }
 }

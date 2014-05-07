@@ -11557,7 +11557,7 @@ WalkontableScrollbar.prototype.refresh = function () {
     sliderSize = tableHeight - 2; //2 is sliders border-width
     this.sliderStyle.float = "right";
     this.sliderStyle.top = this.instance.wtDom.offset(this.$table[0]).top - this.instance.wtDom.offset(this.container).top + 'px';
-    this.sliderStyle.left = $(".htcore")[0].offsetWidth + 'px'; //1 is sliders border-width
+    this.sliderStyle.left = this.$table[0].offsetWidth + 'px'; //1 is sliders border-width
     this.sliderStyle.height = Math.max(sliderSize, 0) + 'px';
     this.sliderStyle.width = "32px";
   }
