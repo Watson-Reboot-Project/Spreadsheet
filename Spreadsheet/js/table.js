@@ -105,12 +105,21 @@
 	switch(figNum)
 	{
     case 3:
+    case 4:
       minRow = 8;
       maxRow = 8;
       minCol = 4;
       maxCol = 4;
       tableHeight = 300;
       break;
+    case 81:
+    case 82:
+      minRow = 7;
+      maxRow = 7;
+      minCol = 6;
+      maxCol = 6;
+      tableHeight = 350;
+      break
     default:
       //sandbox mode
       minRow = 30;
@@ -129,7 +138,8 @@
 	  height: tableHeight,
 	  rowHeaders: true,
 	  colHeaders: true,
-	  outsideClickDeselects: false
+	  outsideClickDeselects: false,
+	  fixedColumnsLeft: 30
 	}, T);
 
 	//On page load..
@@ -434,10 +444,39 @@
         fillerArray[1][2] = "50";
         fillerArray[2] = []; fillerArray[2][2] = "100";
         fillerArray[3] = []; fillerArray[3][2] = "75";
-        fillerArray[5] = []; fillerArray[5][1] = "Average"; fillerArray[5][2] = "=AVG(C2:C4)";
-        console.log(fillerArray);
+        fillerArray[5] = []; fillerArray[5][1] = "Average";
         ht.populateFromArray(0,0, fillerArray,5,2);
+        ht.setDataAtCell(5,2,"=AVG(C2:C4)");
         break;
+      case 4:
+        var fillerArray = [];
+        fillerArray[0] = [];
+        fillerArray[1] = []; fillerArray[1][1] = "0"; fillerArray[1][2] = "Celsius";
+        fillerArray[2] = []; fillerArray[2][2] = "Fahrenheit";
+        ht.populateFromArray(0,0, fillerArray, 3,3);
+        ht.setDataAtCell(2,1,"=(9/5)*B2+32");
+        break;
+      case 81:
+        var fillerArray = [];
+        fillerArray[0] = [];
+        fillerArray[1] = []; fillerArray[1][1] = "Exam 1"; fillerArray[1][2] = "50"; fillerArray[1][4] = "Homework"; fillerArray[1][5] = "65";
+        fillerArray[2] = []; fillerArray[2][2] = "Exam 2"; fillerArray[2][2] = "100"; fillerArray[2][5] = "70";
+        fillerArray[3] = []; fillerArray[3][1] = "Hwk Avg."; fillerArray[3][2] = " =(F2+F3+F4+F5)/4"; fillerArray[3][5] = "80";
+        fillerArray[4] = []; fillerArray[4][5] = "85";
+        fillerArray[5] = []; fillerArray[5][1] = "Final grade"; fillerArray[5][2] = " =(C2+C3+C4)/3";
+        ht.populateFromArray(0,0, fillerArray, 5, 5);
+        break;
+      case 82:
+        var fillerArray = [];
+        fillerArray[0] = [];
+        fillerArray[1] = []; fillerArray[1][1] = "Exam 1"; fillerArray[1][2] = "50"; fillerArray[1][4] = "Homework"; fillerArray[1][5] = "65";
+        fillerArray[2] = []; fillerArray[2][2] = "Exam 2"; fillerArray[2][2] = "100"; fillerArray[2][5] = "70";
+        fillerArray[3] = []; fillerArray[3][1] = "Hwk Avg."; fillerArray[3][5] = "80";
+        fillerArray[4] = []; fillerArray[4][5] = "85";
+        fillerArray[5] = []; fillerArray[5][1] = "Final grade";
+        ht.populateFromArray(0,0, fillerArray, 5, 5);
+        ht.setDataAtCell(3,2,"=(F2+F3+F4+F5)/4");
+        ht.setDataAtCell(5,2, "=(C2+C3+C4)/3");
       default:
         break;
 	  }

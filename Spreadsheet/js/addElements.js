@@ -22,11 +22,12 @@ function AddElements(figNum) {
 
 	//Div to restrict with of spreadsheet
 	var tableHolder = document.createElement('div');
-	tableHolder.className = "col-md-7 col-xs-6 tableHolder";
+	tableHolder.className = "col-md-8 col-xs-6 tableHolder";
 	//Spreadsheet div
 	var tableDiv = document.createElement('div');
 	this.tableDiv = tableDiv;
 	tableDiv.id = "WatsonTable" + figNum;
+	console.log(tableDiv.id);
 
 	//input for cell functions
 	var functionBox = document.createElement('input');
@@ -149,9 +150,11 @@ function AddElements(figNum) {
 	switch(figNum)
 	{
     case 3:
-      console.log(buttonDiv);
       buttonDiv.style.display = "none";
       functionBox.style.display = "none";
+      break;
+    case 4:
+      buttonDiv.style.display = "none";
       break;
     default:
       break;
