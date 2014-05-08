@@ -19,10 +19,11 @@ function AddElements(figNum) {
 	var row_1 = document.createElement('div');
 	row_1.id = "row1" + figNum;
 	row_1.className = "row";
+	row_1.style.padding = "0px";
+	row_1.style.margin = "0px";
 
 	//Div to restrict with of spreadsheet
 	var tableHolder = document.createElement('div');
-	tableHolder.className = "col-md-8 col-xs-6 tableHolder";
 	//Spreadsheet div
 	var tableDiv = document.createElement('div');
 	this.tableDiv = tableDiv;
@@ -35,7 +36,7 @@ function AddElements(figNum) {
 	functionBox.id = "functionBox" + figNum;
 	functionBox.type = "text";
 	functionBox.name = "Functions";
-	functionBox.className = "input-group col-md-7 col-xs-6";
+	//functionBox.className = "input-group col-md-7 col-xs-6";
 
 	// moves bootstrap to next row
 	var cfDiv = document.createElement('div');
@@ -45,7 +46,6 @@ function AddElements(figNum) {
 	var buttonDiv = document.createElement('div');
 	this.buttonDiv = buttonDiv;
 	buttonDiv.id = 'buttonDiv' + figNum;
-	buttonDiv.className = "btn-group-vertical col-xs-2 col-md-2 col-md-offset-1 col-xs-offset-1";
 
 	//Buttons
 	var cutButton = document.createElement('button');
@@ -144,19 +144,31 @@ function AddElements(figNum) {
 	row_1.appendChild(buttonDiv);
 
 	var container = document.getElementById("container" + figNum);
+	container.style.padding = "0px";
 	container.appendChild(functionBox);
 	container.appendChild(row_1);
 	
 	switch(figNum)
 	{
     case 3:
-      buttonDiv.style.display = "none";
-      functionBox.style.display = "none";
-      break;
     case 4:
+    case 81:
+    case 82:
+    case 91:
+    case 92:
+    case 93:
+    case 94:
+    case 131:
+    case 132:
+    case 141:
+    case 142:
       buttonDiv.style.display = "none";
+      functionBox.style.width = "100%";
       break;
     default:
+      functionBox.style.width = "71%";
+      tableHolder.className = "col-md-8 col-xs-6 tableHolder";
+      buttonDiv.className = "btn-group-vertical col-xs-2 col-md-2 col-md-offset-1 col-xs-offset-1";
       break;
 	}
 }

@@ -224,6 +224,44 @@ function CellFunctions(figNum) {
       }
   }, div);
   }
+  
+  //allows programmatical editing of the format array/
+  this.fillFormatArray = function(row, col, endRow, endCol, option)
+  {
+    var temp;
+    if(endCol < col)
+    {
+  			temp = endCol;
+  			endCol = col;
+  			col = temp;
+  	}
+  	if(endRow < row)
+  	{
+  			temp = endRow;
+  			endRow = row;
+  			row = temp;
+  	}
+    for(i=row; i<=endRow; i++)
+    {
+      if(T.formatArray[i]===undefined)
+        T.formatArray[i] = [];
+        for(k=col; k<=endCol; k++)
+        {
+          if(T.formatArray[i][k] ===undefined)
+            {
+              T.formatArray[i][k] ={};
+              T.formatArray[i][k].index =0;
+              T.formatArray[i][k].type = [0];
+              
+            }
+            T.formatArray[i][k].index++;
+            T.formatArray[i][k].type[T.formatArray[i][k].index] = option;
+        }
+    }
+    
+  }
+  fillFormatArray = this.fillFormatArray;
+
 
   //Handles the cut operation
   this.cut = function()

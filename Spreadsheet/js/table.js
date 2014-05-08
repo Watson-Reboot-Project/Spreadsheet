@@ -105,6 +105,10 @@
 	switch(figNum)
 	{
     case 3:
+      minRow = 8;
+      maxRow = 8;
+      minCol = 3;
+      maxCol = 3;
     case 4:
       minRow = 8;
       maxRow = 8;
@@ -119,7 +123,30 @@
       minCol = 6;
       maxCol = 6;
       tableHeight = 350;
-      break
+      break;
+    case 91:
+    case 92:
+    case 93:
+    case 94:
+      minRow = 3;
+      maxRow = 3;
+      minCol = 3;
+      maxCol = 3;
+      break;
+    case 131:
+    case 132:
+      minRow = 7;
+      maxRow = 7;
+      minCol = 4;
+      maxCol = 4;
+      break;
+    case 141:
+    case 142:
+      minRow = 12;
+      maxRow = 12;
+      minCol = 5;
+      maxCol = 5;
+      break;
     default:
       //sandbox mode
       minRow = 30;
@@ -139,7 +166,6 @@
 	  rowHeaders: true,
 	  colHeaders: true,
 	  outsideClickDeselects: false,
-	  fixedColumnsLeft: 30
 	}, T);
 
 	//On page load..
@@ -434,10 +460,11 @@
 	    vertDragDealer.dragging = false;
 	  });
 	  
+	  var fillerArray = [];
 	  switch(figNum)
 	  {
       case 3:
-        var fillerArray = [];
+        CF.fillFormatArray(0,0,7,4, formatOption.ZERO);
         fillerArray[0] = []; fillerArray[4] = [];
         fillerArray[1] = [];
         fillerArray[1][1] = "Grades";
@@ -449,7 +476,6 @@
         ht.setDataAtCell(5,2,"=AVG(C2:C4)");
         break;
       case 4:
-        var fillerArray = [];
         fillerArray[0] = [];
         fillerArray[1] = []; fillerArray[1][1] = "0"; fillerArray[1][2] = "Celsius";
         fillerArray[2] = []; fillerArray[2][2] = "Fahrenheit";
@@ -457,7 +483,6 @@
         ht.setDataAtCell(2,1,"=(9/5)*B2+32");
         break;
       case 81:
-        var fillerArray = [];
         fillerArray[0] = [];
         fillerArray[1] = []; fillerArray[1][1] = "Exam 1"; fillerArray[1][2] = "50"; fillerArray[1][4] = "Homework"; fillerArray[1][5] = "65";
         fillerArray[2] = []; fillerArray[2][2] = "Exam 2"; fillerArray[2][2] = "100"; fillerArray[2][5] = "70";
@@ -467,19 +492,108 @@
         ht.populateFromArray(0,0, fillerArray, 5, 5);
         break;
       case 82:
-        var fillerArray = [];
         fillerArray[0] = [];
         fillerArray[1] = []; fillerArray[1][1] = "Exam 1"; fillerArray[1][2] = "50"; fillerArray[1][4] = "Homework"; fillerArray[1][5] = "65";
         fillerArray[2] = []; fillerArray[2][2] = "Exam 2"; fillerArray[2][2] = "100"; fillerArray[2][5] = "70";
         fillerArray[3] = []; fillerArray[3][1] = "Hwk Avg."; fillerArray[3][5] = "80";
         fillerArray[4] = []; fillerArray[4][5] = "85";
-        fillerArray[5] = []; fillerArray[5][1] = "Final grade";
-        ht.populateFromArray(0,0, fillerArray, 5, 5);
+        ht.populateFromArray(0,0, fillerArray, 4, 5);
         ht.setDataAtCell(3,2,"=(F2+F3+F4+F5)/4");
         ht.setDataAtCell(5,2, "=(C2+C3+C4)/3");
+        ht.setDataAtCell(5,1,"Final grade");
+        break;
+      case 91:
+        fillerArray[0] = [];
+        fillerArray[1] = []; fillerArray[1][1] = "0"; fillerArray[1][2] = "Celsius";
+        fillerArray[2] = []; fillerArray[2][1] = " =(9/5)*B2+32"; fillerArray[2][2] = "Fahrenheit";
+        ht.populateFromArray(0,0, fillerArray, 2, 2);
+        break;
+      case 92:
+        fillerArray[0] = [];
+        fillerArray[1] = []; fillerArray[1][1] = "0"; fillerArray[1][2] = "Celsius";
+        fillerArray[2] = []; fillerArray[2][1] = "=(9/5)*B2+32"; fillerArray[2][2] = "Fahrenheit";
+        ht.populateFromArray(0,0, fillerArray, 2, 2);
+        break;
+      case 93:
+        fillerArray[0] = [];
+        fillerArray[1] = []; fillerArray[0][0] = "0"; fillerArray[0][1] = "Celsius";
+        fillerArray[2] = []; fillerArray[1][0] = " =(9/5)*A1+32"; fillerArray[1][1] = "Fahrenheit";
+        ht.populateFromArray(0,0, fillerArray, 1, 1);
+        break;
+      case 94:
+        fillerArray[0] = [];
+        fillerArray[1] = []; fillerArray[0][0] = "0"; fillerArray[0][1] = "Celsius";
+        fillerArray[2] = []; fillerArray[1][0] = "=(9/5)*A1+32"; fillerArray[1][1] = "Fahrenheit";
+        ht.populateFromArray(0,0, fillerArray, 1, 1);
+        break;
+      case 131:
+        
+        CF.fillFormatArray(0,0,6,3, formatOption.TWO);
+        fillerArray[0] = []; fillerArray[0][0] = "Name"; fillerArray[0][1] = "2215";
+        fillerArray[1] = []; fillerArray[1][0] = "April, R."; fillerArray[1][1] = "50000.00";
+        fillerArray[2] = []; fillerArray[2][0] = "Pike, C."; fillerArray[2][1] = "55432.10";
+        fillerArray[3] = []; fillerArray[3][0] = "Kirk, J. T."; fillerArray[3][1] = "69666.42";
+        fillerArray[4] = []; fillerArray[4][0] = "Picard, J."; fillerArray[4][1] = "72123.45";
+        fillerArray[5] = []; fillerArray[5][0] = "Janeway, K."; fillerArray[5][1] = "888888.00";
+        ht.populateFromArray(0,0, fillerArray, 5, 2);
+        ht.setDataAtCell(0,2, " =B1*1.1");
+        ht.setDataAtCell(1,2, " =B2*1.1");
+        ht.setDataAtCell(2,2, " =B3*1.1");
+        ht.setDataAtCell(3,2, " =B4*1.1");
+        ht.setDataAtCell(4,2, " =B5*1.1");
+        ht.setDataAtCell(5,2, " =B6*1.1");
+        break;
+      case 132:
+        CF.fillFormatArray(0,0,6,3, formatOption.TWO);
+        fillerArray[0] = []; fillerArray[0][0] = "Name"; fillerArray[0][1] = "2215";
+        fillerArray[1] = []; fillerArray[1][0] = "April, R."; fillerArray[1][1] = "50000.00";
+        fillerArray[2] = []; fillerArray[2][0] = "Pike, C."; fillerArray[2][1] = "55432.10";
+        fillerArray[3] = []; fillerArray[3][0] = "Kirk, J. T."; fillerArray[3][1] = "69666.42";
+        fillerArray[4] = []; fillerArray[4][0] = "Picard, J."; fillerArray[4][1] = "72123.45";
+        fillerArray[5] = []; fillerArray[5][0] = "Janeway, K."; fillerArray[5][1] = "888888.00";
+        ht.populateFromArray(0,0, fillerArray, 5, 2);
+        ht.setDataAtCell(0,2, "=B1+1");
+        ht.setDataAtCell(1,2, "=B2*1.1");
+        ht.setDataAtCell(2,2, "=B3*1.1");
+        ht.setDataAtCell(3,2, "=B4*1.1");
+        ht.setDataAtCell(4,2, "=B5*1.1");
+        ht.setDataAtCell(5,2, "=B6*1.1");
+        break;
+      case 141:
+      CF.fillFormatArray(0,0,6,3, formatOption.TWO);
+      fillerArray[0] = []; fillerArray[2] = []; fillerArray[7] = []; fillerArray[10] = [];
+      fillerArray[1] = []; fillerArray[1][1] = "Homework"; fillerArray[1][3] = "Exams";
+      fillerArray[3] = []; fillerArray[3][1] = "20"; fillerArray[3][3] = "100";
+      fillerArray[4] = []; fillerArray[4][1] = "20"; fillerArray[4][3] = "100";
+      fillerArray[5] = []; fillerArray[5][1] = "20"; fillerArray[5][3] = "100";
+      fillerArray[6] = []; fillerArray[6][1] = "20";
+      fillerArray[8] = []; fillerArray[8][0] = "Averages"; fillerArray[8][1] = " =AVG(B4:B7)"; fillerArray[8][3] = "/20"; fillerArray[8][4] = " =(.2*D4+.2*D5+.3*D6)/.7";
+      fillerArray[9] = []; fillerArray[9][0] = "Points earned"; fillerArray[9][1] = " =B9/20*30"; fillerArray[9][3] = " =D9/100*70";
+      fillerArray[11] = []; fillerArray[11][0] = "Final Score"; fillerArray[11][1] = " =B10+D10";
+      ht.populateFromArray(0,0, fillerArray, 11, 4);
+      ht.setDataAtCell(6,3, "");
+        break;
+      case 142:
+      CF.fillFormatArray(7,0,11,3, formatOption.ZERO);
+      fillerArray[0] = []; fillerArray[2] = []; fillerArray[7] = []; fillerArray[10] = [];
+      fillerArray[1] = []; fillerArray[1][1] = "Homework"; fillerArray[1][3] = "Exams";
+      fillerArray[3] = []; fillerArray[3][1] = "20"; fillerArray[3][3] = "100";
+      fillerArray[4] = []; fillerArray[4][1] = "20"; fillerArray[4][3] = "100";
+      fillerArray[5] = []; fillerArray[5][1] = "20"; fillerArray[5][3] = "100";
+      fillerArray[6] = []; fillerArray[6][1] = "20";
+      fillerArray[8] = []; fillerArray[8][0] = "Averages"; fillerArray[8][1] = "=AVG(B4:B7)"; fillerArray[8][2] = "/20"; fillerArray[8][3] = "=(.2*D4+.2*D5+.3*D6)/.7"; fillerArray[8][4] = "/100";
+      fillerArray[9] = []; fillerArray[9][0] = "Points earned"; fillerArray[9][1] = "=B9/20*30"; fillerArray[9][3] = "=D9/100*70";
+      fillerArray[11] = []; fillerArray[11][0] = "Final Score"; fillerArray[11][1] = "=B10+D10";
+      ht.populateFromArray(0,0, fillerArray, 11, 4);
+      ht.populateFromArray(0,0, fillerArray, 11, 4);
+      ht.populateFromArray(0,0, fillerArray, 11, 4);
+      ht.populateFromArray(0,0, fillerArray, 11, 4);
+      ht.setDataAtCell(6,3, "");
+        break;
       default:
         break;
 	  }
+    var p = ht.$table;
 	});
 
 	//Handles functionality of whenever the enter key is pressed. This should be the
