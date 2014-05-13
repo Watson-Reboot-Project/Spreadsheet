@@ -31,8 +31,9 @@
 	this.formatArray = formatArray;
 	//This keeps track of which cells are fully updated after changing the value of a cell on which
 	//others are dependant
-	var updateTable = [];
-	this.updateTable = updateTable;
+	this.updateTable = [];
+  //When a cell is a numeric value or an expression, store the value here.
+	this.pushTable = [];
 	//keeps track of whether cells are updating and which cell initiated the update cycle
 	var updateState = [false, 0, 0];
 	this.updateState = updateState;
@@ -60,7 +61,8 @@
 	  NORMAL:0,
 	  FUNCTION:1,
 	  UNDO:2,
-	  REDO:3
+	  REDO:3,
+	  PUSHUPDATES:4
 	};
 	this.URTypes = URTypes;
 	this.URArray = [];
@@ -167,7 +169,153 @@
 	  colHeaders: true,
 	  outsideClickDeselects: false,
 	}, T);
-
+	
+	//Procedure for evaluating a cell's content.
+	//Given a value objects which includes the row,
+	//column, and function string of the cell, it changes the
+	//value object's .value attribute to the display value of the cell.
+	//also tracks related cells by updating tracking tables.
+		cellRoutine = function(value)
+		{
+        console.log(value);
+	      var selected = {};
+	      selected[0] =value.row;
+	      selected[1] = value.prop;
+	      selected[2] = value.value;
+	      //when a cell is going through cellRoutine, it is being updated.
+	      //this puts all the cells that depend on it into question.
+	      //This cell in particular is in limbo until the value is acquired.
+	        T.updateTable[selected[0]*ht.countRows()+selected[1]] = null;
+	        if(T.usedBy[selected[0]]!==undefined && T.usedBy[selected[0]][selected[1]]!==undefined)
+	        {
+	        for(var i = 0; i<=T.usedBy[selected[0]][selected[1]].length; i++)
+	         {
+	          if(T.usedBy[selected[0]][selected[1]][i]!==undefined)
+	          {
+	              for(var k = 0; k<=T.usedBy[selected[0]][selected[1]][i].length; k++)
+	              {
+	                if(T.usedBy[selected[0]][selected[1]][i][k])
+	                    CF.setUpdateTable(i,k);
+	              }
+	          }
+	         }
+	        }
+	      fillFuncTracker(selected);
+	      var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
+	      func.funcString = value.value;
+	      //Using the cell editor does not set a cell's value until
+	      //the selected cell changes. While using the text box, I use the setData
+	      //method to change the display value of a cell. So this test prevents any
+	      //sort of function string handling while cells are being edited.
+				if(!(ib.is(":focus")))
+				{
+	        //Since the function string has changed, begin by discarding all cells this cell
+	        //previously depended on.
+	        CF.clearAssociations(selected[0],selected[1]);
+					var details = FP.functionParse(value.value);
+					if(details.function==FP.functionCall.SUM) //deprecated
+					{
+	          var cell = {};
+	          cell.row = value.row;
+	          cell.col = value.prop;
+						value.value = functionSUM(details);
+						var error = updateDependencyByDetails(details, cell);
+						if(error)
+	            value.value = "#ERROR";
+					}
+					else if(details.function==FP.functionCall.AVG) //deprecated
+					{
+	          var cell = {};
+	          cell.row = value.row;
+	          cell.col = value.prop;
+						value.value = functionAVG(details);
+						var error = updateDependencyByDetails(details, cell);
+						if(error)
+	            value.value = "#ERROR";
+					}
+					else if(details.function==FP.functionCall.EXPRESSION)
+					{
+	          var cell = {};
+	          cell.row = value.row;
+	          cell.col = value.prop;
+	          value.value = CF.evaluateTableExpression(details.row, cell);
+					}
+	        else if(details.function==FP.functionCall.ERROR)
+	        {
+	          value.value = "#ERROR";
+	        }
+          //insert the proper value into the update table.
+          if(+value.value !== NaN)
+            T.updateTable[ht.countRows()*value.row+value.prop] = +value.value;
+          //After a cell is changed, it needs to notify any cell that depends on it.
+          CF.notifyDependants(value.row, value.prop);
+	        //check for format specified
+	        if(formatArray[selected[0]]!==undefined &&
+	        formatArray[selected[0]][selected[1]]!==undefined &&
+	        formatArray[selected[0]][selected[1]].type[formatArray[selected[0]][selected[1]].index]!=formatOption.FNONE &&
+	        !isNaN(parseFloat(value.value)))
+	        {
+	          var index = value.value.indexOf('.');
+	          if(index>=0)
+	          {
+	            value.value =value.value+"000";
+	          }
+	          else
+	          {
+	            index = value.value.length;
+	            value.value =value.value+".000";
+	          }
+	          var format = formatArray[selected[0]][selected[1]];
+	          switch(format.type[format.index])
+	          {
+	            case formatOption.ZERO:
+	              value.value = value.value.substr(0,index);
+	              break;
+	            case formatOption.ONE:
+	              value.value = value.value.substr(0,index+2);
+	              break;
+	            case formatOption.TWO:
+	              value.value = value.value.substr(0,index+3);
+	              break;
+	            case formatOption.THREE:
+	              value.value = value.value.substr(0,index+4);
+	              break;
+	            case formatOption.DOLLARS:
+	              value.value = "$"+value.value.substr(0, index+3);
+	              break;
+	          }
+	        }
+				}
+		}
+		this.cellRoutine = cellRoutine;
+		
+		//pushes the updates stored in pushTable to the cells.
+		function pushUpdates()
+		{
+      T.URFlag = URTypes.PUSHUPDATES;
+      var fillerArray = [];
+      var largest = 0;
+      for(var i = 0; i<=T.pushTable.length; i++)
+      {
+        fillerArray[i] = [];
+        if(T.pushTable[i]===undefined)
+          ; //just need an empty array if undefined
+        else
+        {
+          if(T.pushTable[i].length>largest)
+            largest = T.pushTable[i].length;
+          for(var k = 0; k<=T.pushTable[i].length; k++)
+          {
+            if(T.pushTable[i][k]===undefined)
+              ; //do nothing
+            else
+              fillerArray[i][k] = T.pushTable[i][k];
+          }
+        }
+      }
+      T.pushTable = [];
+      ht.populateFromArray(0,0, fillerArray, i, largest);
+		}
 	//On page load..
 	$(document).ready(function() {
 	  //Default selected cell to 0,0
@@ -209,18 +357,20 @@
 						isFunction = true;
 						break;
 					}*/
-				//After a cell is changed, it needs to notify any cell that depends on it.
-				CF.notifyDependants(changes[0][0], changes[0][1]);
-				if(updateState[0] && updateState[1] == changes[0][0] && updateState[2] == changes[0][1])
+				/*if(updateState[0] && updateState[1] == changes[0][0] && updateState[2] == changes[0][1])
 				{
 	        updateState[0] = false;
 				}
 				else
-	        updateTable[changes[0][0]*ht.countRows()+changes[0][1]] = true;
+	        updateTable[changes[0][0]*ht.countRows()+changes[0][1]] = true;*/
 				if(isFunction)
 	        CF.changeInput(func.funcString);
 				if(!isFunction)
 				 CF.changeInput(ht.getDataAtCell(selected[0], selected[1]));
+				console.log(T.pushTable);
+				console.log(T.pushTable.length);
+				if(T.pushTable.length > 0)
+          pushUpdates();
 			}
 		});
 		
@@ -292,10 +442,6 @@
 	        ib.recentlyChanged = false;
 	      }
 				var selected = ht.getSelected();
-	      /*if(usedBy[selected[0]]!==undefined && usedBy[selected[0]][selected[1]]!==undefined)
-	        console.log(usedBy[selected[0]][selected[1]]);
-	      if(dependantOn[selected[0]]!==undefined && dependantOn[selected[0]][selected[1]]!==undefined)
-	        console.log(dependantOn[selected[0]][selected[1]]);*/
 	      var isFunction = false;
 				var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
 				if(func!== undefined)
@@ -315,117 +461,16 @@
 		});
 
 		//Instructions before setting value into a cell.
-		$("#" + AE.tableDiv.id).handsontable({
+		$("#" + AE.tableDiv.id).handsontable(
+		{
 			beforeSet: function e(value)
 			{
-	      var selected = {};
-	      selected[0] =value.row;
-	      selected[1] = value.prop;
-	      selected[2] = value.value;
-	      //this is the original cell that causes updates.
-	      if(!updateState[0])
-	      {
-	        updateTable[selected[0]*ht.countRows()+selected[1]] = true;
-	        if(T.usedBy[selected[0]]!==undefined && T.usedBy[selected[0]][selected[1]]!==undefined)
-	        {
-	        for(var i = 0; i<=T.usedBy[selected[0]][selected[1]].length; i++)
-	         {
-	          if(T.usedBy[selected[0]][selected[1]][i]!==undefined)
-	          {
-	              for(var k = 0; k<=T.usedBy[selected[0]][selected[1]][i].length; k++)
-	              {
-	                if(T.usedBy[selected[0]][selected[1]][i][k])
-	                    CF.setUpdateTable(i,k);
-	              }
-	          }
-	         }
-	        }
-	        updateState[0] = true;
-	        updateState[1] = selected[0];
-	        updateState[2] = selected[1];
-	      }
-	      fillFuncTracker(selected);
-	      var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-	      func.funcString = value.value;
-	      //Using the cell editor does not set a cell's value until
-	      //the selected cell changes. While using the text box, I use the setData
-	      //method to change the display value of a cell. So this test prevents any
-	      //sort of function string handling while cells are being edited.
-				if(!(ib.is(":focus")))
-				{
-	        //Since the function string has changed, begin by discarding all cells this cell
-	        //previously depended on.
-	        CF.clearAssociations(selected[0],selected[1]);
-					var details = FP.functionParse(value.value);
-					if(details.function==FP.functionCall.SUM) //deprecated
-					{
-	          var cell = {};
-	          cell.row = value.row;
-	          cell.col = value.prop;
-						value.value = functionSUM(details);
-						var error = updateDependencyByDetails(details, cell);
-						if(error)
-	            value.value = "#ERROR";
-					}
-					else if(details.function==FP.functionCall.AVG) //deprecated
-					{
-	          var cell = {};
-	          cell.row = value.row;
-	          cell.col = value.prop;
-						value.value = functionAVG(details);
-						var error = updateDependencyByDetails(details, cell);
-						if(error)
-	            value.value = "#ERROR";
-					}
-					else if(details.function==FP.functionCall.EXPRESSION)
-					{
-	          var cell = {};
-	          cell.row = value.row;
-	          cell.col = value.prop;
-	          value.value = CF.evaluateTableExpression(details.row, cell);
-					}
-	        else if(details.function==FP.functionCall.ERROR)
-	        {
-	          value.value = "#ERROR";
-	        }
-	        //check for format specified
-	        if(formatArray[selected[0]]!==undefined &&
-	        formatArray[selected[0]][selected[1]]!==undefined &&
-	        formatArray[selected[0]][selected[1]].type[formatArray[selected[0]][selected[1]].index]!=formatOption.FNONE &&
-	        !isNaN(parseFloat(value.value)))
-	        {
-	          var index = value.value.indexOf('.');
-	          if(index>=0)
-	          {
-	            value.value =value.value+"000";
-	          }
-	          else
-	          {
-	            index = value.value.length;
-	            value.value =value.value+".000";
-	          }
-	          var format = formatArray[selected[0]][selected[1]];
-	          switch(format.type[format.index])
-	          {
-	            case formatOption.ZERO:
-	              value.value = value.value.substr(0,index);
-	              break;
-	            case formatOption.ONE:
-	              value.value = value.value.substr(0,index+2);
-	              break;
-	            case formatOption.TWO:
-	              value.value = value.value.substr(0,index+3);
-	              break;
-	            case formatOption.THREE:
-	              value.value = value.value.substr(0,index+4);
-	              break;
-	            case formatOption.DOLLARS:
-	              value.value = "$"+value.value.substr(0, index+3);
-	              break;
-	          }
-	        }
-				}
-			}
+        if(T.URFlag!=T.URTypes.PUSHUPDATES)
+        {
+          T.cellRoutine(value);
+        }
+        //if the display value is a number, put it into the value table.
+		 }
 		});
 		
 		//Listens for double click MITCHELL'S NOTE

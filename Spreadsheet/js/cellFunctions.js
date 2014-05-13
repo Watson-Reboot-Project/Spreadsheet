@@ -430,7 +430,7 @@ function CellFunctions(figNum) {
         {
           for(var k=0; k<=T.usedBy[row][col][i].length; k++)
           {
-            //if T.updateTable[index] is true then the cell is completely up-to-date.
+            //if T.updateTable[index] is a value then the cell is completely up-to-date.
             //if false then update it.
             //if it is null, then there is a circular reference.
             if(T.usedBy[row][col][i][k] && T.updateTable[i*ht.countRows()+k]!==null)
@@ -438,7 +438,22 @@ function CellFunctions(figNum) {
               T.updateTable[i*ht.countRows()+k] = null;
               if(T.usedBy[i]===undefined || T.usedBy[i][k]===undefined ||
               T.usedBy[i][k][row]===undefined || !T.usedBy[i][k][row][col])
-                ht.setDataAtCell(i, k, T.funcTracker[i*ht.countRows()+k].funcString);
+              {
+                var value = {};
+                value.row = i;
+                value.prop = k;
+                var func = T.funcTracker[i*ht.countRows()+k]
+                if(func.funcString!==undefined)
+                  value.value = func.funcString;
+                else
+                  value.value = "";
+                console.log(T.updateTable);
+                T.cellRoutine(value);
+                if(T.pushTable[i]===undefined)
+                  T.pushTable[i] = [];
+                T.pushTable[i][k] = value.value;
+                
+              }
             }
             //outdated after the introduction of updated cell tracking
             /*else if(T.usedBy[row][col][i][k] && !debug)
@@ -564,6 +579,7 @@ function CellFunctions(figNum) {
 
   function evaluateTableExpression(expression, selectedCell)
   {
+        console.log(T.updateTable);
         //replace all cell names with the values of those cells.
         //And replace SUM and AVG operations with their values.
         var selected = [];
@@ -571,7 +587,7 @@ function CellFunctions(figNum) {
         selected[1] = selectedCell.col;
         //ignore dollar signs
         expression = expression.replace(/\$/g,'');
-        expression = expression.replace(/ /g,'');
+        //expression = expression.replace(/ /g,'');
         expression = expression.toUpperCase();
         var SUMAVG = expression.match(FP.SUMAVGRE);
         var saGet = false;
@@ -617,7 +633,14 @@ function CellFunctions(figNum) {
               if(T.updateTable[i*ht.countRows()+k]===false)
               {
                 T.updateTable[i*ht.countRows()+k] = null;
-                ht.setDataAtCell(i, k, T.funcTracker[i*ht.countRows()+k].funcString);
+                var value = {};
+                value.row = i;
+                value.prop = k;
+                value.value = T.funcTracker[i*ht.countRows()+k].funcString;
+                T.cellRoutine(value);
+                if(T.pushTable[i] === undefined)
+                  T.pushTable[i] = [];
+                T.pushTable[i][k] = value.value;
               }
               
             }
@@ -663,8 +686,14 @@ function CellFunctions(figNum) {
             //remember portion after.
             expressionEnd = expression.substr(cellNames.index+cellNames[0].length);
             //get value of cell
-            insert=ht.getDataAtCell(cellRow, cellCol);
-            insert=convertCellTextToNumber(insert);
+            //deprecated method after update table was implemented
+            //insert=ht.getDataAtCell(cellRow, cellCol);
+            //insert=convertCellTextToNumber(insert);
+            var updatedValue = T.updateTable[ht.countRows()*cellRow+cellCol];
+            if(updatedValue===undefined)
+              insert = 0;
+            else
+              insert = T.updateTable[ht.countRows()*cellRow+cellCol];
             if(insert===null)
               insert=0;
             //reform the expression string
@@ -681,7 +710,15 @@ function CellFunctions(figNum) {
             if(T.updateTable[cellRow*ht.countRows()+cellCol]===false)
             {
                   T.updateTable[cellRow*ht.countRows()+cellCol] = null;
-                  ht.setDataAtCell(cellRow, cellCol, T.funcTracker[cellRow*ht.countRows()+cellCol].funcString);
+                  T.updateTable[i*ht.countRows()+k] = null;
+                  var value = {};
+                  value.row = i;
+                  value.prop = k;
+                  value.value = T.funcTracker[i*ht.countRows()+k].funcString;
+                  T.cellRoutine(value);
+                  if(T.pushTable[i] === undefined)
+                  T.pushTable[i] = [];
+                  T.pushTable[i][k] = value.value;
             }
             //circular dependancy
             if(T.dependantOn[cellRow]!==undefined && T.dependantOn[cellRow][cellCol]!==undefined && 
@@ -919,7 +956,7 @@ function CellFunctions(figNum) {
       //a valid expression, so cell references must be parsed.
       if(oldFS!==undefined && oldFS.indexOf("=")==0)
       {
-        oldFS = oldFS.replace(/ /g,'');
+        //oldFS = oldFS.replace(/ /g,'');
         oldFS = oldFS.toUpperCase();
         //calculate differences
         var rowDif = pasteRow-initialRow;
