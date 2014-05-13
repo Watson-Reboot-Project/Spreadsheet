@@ -496,6 +496,16 @@ Handsontable.Core = function (rootElement, userSettings, EF) {
 
         case 'overwrite' :
         default:
+          //MITCHELLSNOTE
+          //A basic overdo of what I did here:
+          //Disabled the nature of handsontable wrapping during populateFromArray
+          //I did this by providing two checks before setData-
+          //if the input array index is undefined, simply push what is already in the table.
+          //If we have already looped through the index of the input array, push what is already in the table.
+          //We only insert new values into the table if this is the first time that a valid entry for
+          //the array is indexed.
+          var redo = false;
+          var c2 = start.row, r2 = start.col;
           // overwrite and other not specified options
           current.row = start.row;
           current.col = start.col;
@@ -505,22 +515,30 @@ Handsontable.Core = function (rootElement, userSettings, EF) {
             }
             current.col = start.col;
             clen = input[r] ? input[r].length : 0;
+            redo = false;
             for (c = 0; c < clen; c++) {
               if ((end && current.col > end.col) || (!priv.settings.minSpareCols && current.col > instance.countCols() - 1) || (current.col >= priv.settings.maxCols)) {
                 break;
               }
               if (!instance.getCellMeta(current.row, current.col).readOnly) {
+                if(input[r][c]!==undefined && !redo)
                 setData.push([current.row, current.col, input[r][c]]);
+                else
+                  setData.push([current.row, current.col, instance.getDataAtCell(r2, c2)]);
               }
               current.col++;
-              if (end && c === clen - 1) {
+              if (end && c === clen - 1)
+              {
                 c = -1;
+                redo = true;
               }
+              c2++;
             }
             current.row++;
             if (end && r === rlen - 1) {
               r = -1;
             }
+            r2++;
           }
           instance.setDataAtCell(setData, null, null, source || 'populateFromArray');
           break;
@@ -1196,6 +1214,7 @@ Handsontable.Core = function (rootElement, userSettings, EF) {
    * @param {String} source String that identifies how this change will be described in changes array (useful in onChange callback)
    */
   this.setDataAtCell = function (row, col, value, source) {
+    
     var input = setDataInputToArray(row, col, value)
       , i
       , ilen
@@ -10908,7 +10927,6 @@ function WalkontableEvent(instance) {
     if (that.instance.hasSetting('onCellMouseOver')) {
       var TABLE = that.instance.wtTable.TABLE;
       var TD = that.wtDom.closest(event.target, ['TD', 'TH'], TABLE);
-      //console.log(that.wtDom.isChildOf(TD, TABLE));
       //MitchellsNoteM: probably going to need to add this back for performance.
       if (TD && TD !== lastMouseOver && that.wtDom.isChildOf(TD, TABLE)) {
         lastMouseOver = TD;

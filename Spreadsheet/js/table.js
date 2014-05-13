@@ -177,7 +177,6 @@
 	//also tracks related cells by updating tracking tables.
 		cellRoutine = function(value)
 		{
-        console.log(value);
 	      var selected = {};
 	      selected[0] =value.row;
 	      selected[1] = value.prop;
@@ -200,9 +199,12 @@
 	          }
 	         }
 	        }
-	      fillFuncTracker(selected);
-	      var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-	      func.funcString = value.value;
+	      if(T.URFlag == T.URTypes.NORMAL)
+	      {
+          fillFuncTracker(selected);
+          var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
+          func.funcString = value.value;
+	      }
 	      //Using the cell editor does not set a cell's value until
 	      //the selected cell changes. While using the text box, I use the setData
 	      //method to change the display value of a cell. So this test prevents any
@@ -245,10 +247,19 @@
 	          value.value = "#ERROR";
 	        }
           //insert the proper value into the update table.
-          if(+value.value !== NaN)
-            T.updateTable[ht.countRows()*value.row+value.prop] = +value.value;
+          //it is okay to ignore a single dollar sign in front because undo and redo
+          //may put values directly into the table in this format.
+          value2 = value.value;
+          if(typeof value2 == 'string' && value2.charAt(0)=='$')
+            value2 = value2.slice(1);
+          console.log(value2);
+          if(+value2 !== NaN)
+            T.updateTable[ht.countRows()*value.row+value.prop] = +value2;
+          else
+            T.updateTable[ht.countRows()*value.row+value.prop] = undefined;
           //After a cell is changed, it needs to notify any cell that depends on it.
-          CF.notifyDependants(value.row, value.prop);
+          if(T.URFlag == T.URTypes.NORMAL)
+            CF.notifyDependants(value.row, value.prop);
 	        //check for format specified
 	        if(formatArray[selected[0]]!==undefined &&
 	        formatArray[selected[0]][selected[1]]!==undefined &&
@@ -292,7 +303,7 @@
 		//pushes the updates stored in pushTable to the cells.
 		function pushUpdates()
 		{
-      T.URFlag = URTypes.PUSHUPDATES;
+      T.URFlag = T.URTypes.PUSHUPDATES;
       var fillerArray = [];
       var largest = 0;
       for(var i = 0; i<=T.pushTable.length; i++)
@@ -345,7 +356,15 @@
 	        T.URIndex++;
 	        T.URArray = T.URArray.slice(0,T.URIndex);
 	      }
-	      T.URFlag = T.URTypes.NORMAL;
+	      if(T.URFlag == T.URTypes.PUSHUPDATES)
+	      {
+          T.URArray[T.URIndex] = {};
+	        T.URArray[T.URIndex].type = T.URTypes.PUSHUPDATES;
+	        T.URIndex++;
+	        T.URArray = T.URArray.slice(0,T.URIndex);
+	      }
+	      if(T.URFlag!=T.URTypes.UNDO && T.URFlag!=T.URTypes.REDO)
+          T.URFlag = T.URTypes.NORMAL;
 				var selected = ht.getSelected();
 				var isFunction = false
 				var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
@@ -367,8 +386,6 @@
 	        CF.changeInput(func.funcString);
 				if(!isFunction)
 				 CF.changeInput(ht.getDataAtCell(selected[0], selected[1]));
-				console.log(T.pushTable);
-				console.log(T.pushTable.length);
 				if(T.pushTable.length > 0)
           pushUpdates();
 			}
