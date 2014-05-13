@@ -28,7 +28,6 @@ function AddElements(figNum) {
 	var tableDiv = document.createElement('div');
 	this.tableDiv = tableDiv;
 	tableDiv.id = "WatsonTable" + figNum;
-	console.log(tableDiv.id);
 
 	//input for cell functions
 	var functionBox = document.createElement('input');
