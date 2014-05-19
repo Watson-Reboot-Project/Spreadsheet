@@ -215,12 +215,12 @@ function CellFunctions(figNum) {
           choice = T.formatOption.FNONE;
         for(var i = row; i <= endRow; i++)
         {
-          if(T.formatArray[i]===undefined)
+          if(T.formatArray[i]==undefined)
             T.formatArray[i] = [];
           fillerArray[i-row] = [];
           for(var k = col; k <= endCol; k++)
           {
-            if(T.formatArray[i][k] ===undefined)
+            if(T.formatArray[i][k]==undefined)
             {
               T.formatArray[i][k] ={};
               T.formatArray[i][k].index =0;
@@ -231,7 +231,7 @@ function CellFunctions(figNum) {
             var index = T.formatArray[i][k].index;
             T.formatArray[i][k].type[index] = choice;
             
-            if(T.funcTracker[i*ht.countRows()+k]!==undefined)
+            if(T.funcTracker[i*ht.countRows()+k]!=undefined)
             {
               fillerArray[i-row][k-col] = T.funcTracker[i*ht.countRows()+k].funcString;
               //ht.setDataAtCell(i, k, T.funcTracker[i*ht.countRows()+k].funcString);
@@ -261,11 +261,11 @@ function CellFunctions(figNum) {
   	}
     for(i=row; i<=endRow; i++)
     {
-      if(T.formatArray[i]===undefined)
+      if(T.formatArray[i]==undefined)
         T.formatArray[i] = [];
         for(k=col; k<=endCol; k++)
         {
-          if(T.formatArray[i][k] ===undefined)
+          if(T.formatArray[i][k]==undefined)
             {
               T.formatArray[i][k] ={};
               T.formatArray[i][k].index =0;
@@ -461,7 +461,7 @@ function CellFunctions(figNum) {
                 value.row = i;
                 value.prop = k;
                 var func = T.funcTracker[i*ht.countRows()+k]
-                if(func.funcString!==undefined)
+                if(func.funcString!=undefined)
                   value.value = func.funcString;
                 else
                   value.value = "";
@@ -550,7 +550,7 @@ function CellFunctions(figNum) {
           break;  
         }
         */
-        if(T.updateTable[ht.countRows()*i+k]!==undefined)
+        if(T.updateTable[ht.countRows()*i+k]!=undefined && !isNaN(T.updateTable[ht.countRows()*i+k]))
         {
           sum = sum+T.updateTable[ht.countRows()*i+k];
         }
@@ -890,7 +890,7 @@ function CellFunctions(figNum) {
           countk = 0;
           for(var k = tempSelected[1]; k<=tempSelected[3]; k++)
           {
-              if(T.funcTracker[i*ht.countRows()+k]!==undefined)
+              if(T.funcTracker[i*ht.countRows()+k]!=undefined)
               tempCopy[counti][countk] = T.funcTracker[i*ht.countRows()+k].funcString;
               //if the function string was undefined, set to empty string so
               //it will be treated as a string.

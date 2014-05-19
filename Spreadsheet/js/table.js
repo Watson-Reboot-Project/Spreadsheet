@@ -14,6 +14,7 @@
 	 //programs, and they are heavily intertwined.
 	 var ib = $("#functionBox" + figNum);
 	 this.ib = ib;
+	 this.WDS = new DataStore;
 	 //for performance purposes, tracks when user has made input so that
 	 //certain update functions can be skipped.
 	 var recentChanges = false; 
@@ -27,8 +28,7 @@
 	this.dependantOn = [];
 	//Note: for all dependencies, undefined is equivalent to false.
 	//stores data for format
-	var formatArray =[];
-	this.formatArray = formatArray;
+	this.formatArray = [];
 	//This keeps track of which cells are fully updated after changing the value of a cell on which
 	//others are dependant
 	this.updateTable = [];
@@ -95,8 +95,9 @@
 
 	//global variables
 	var currSelect = [0,0,0,0];
-	var funcTracker = new Array();
-	this.funcTracker = funcTracker;
+	//var funcTracker = new Array();
+	//this.funcTracker = funcTracker;
+	this.funcTracker = new Array();
 	var meditorManager;
 	var currentEditor;
 	var horDragDealer = 0;
@@ -202,8 +203,9 @@
 	      if(T.URFlag == T.URTypes.NORMAL)
 	      {
           fillFuncTracker(selected);
-          var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-          func.funcString = value.value;
+          var func = T.funcTracker[selected[0]*ht.countRows()+selected[1]];
+          if(func!=undefined)
+            func.funcString = value.value;
 	      }
 	      //Using the cell editor does not set a cell's value until
 	      //the selected cell changes. While using the text box, I use the setData
@@ -252,7 +254,6 @@
           value2 = value.value;
           if(typeof value2 == 'string' && value2.charAt(0)=='$')
             value2 = value2.slice(1);
-          console.log(value2);
           if(+value2 !== NaN)
             T.updateTable[ht.countRows()*value.row+value.prop] = +value2;
           else
@@ -261,9 +262,9 @@
           if(T.URFlag == T.URTypes.NORMAL)
             CF.notifyDependants(value.row, value.prop);
 	        //check for format specified
-	        if(formatArray[selected[0]]!==undefined &&
-	        formatArray[selected[0]][selected[1]]!==undefined &&
-	        formatArray[selected[0]][selected[1]].type[formatArray[selected[0]][selected[1]].index]!=formatOption.FNONE &&
+	        if(T.formatArray[selected[0]]!=undefined &&
+	        T.formatArray[selected[0]][selected[1]]!=undefined &&
+	        T.formatArray[selected[0]][selected[1]].type[T.formatArray[selected[0]][selected[1]].index]!=formatOption.FNONE &&
 	        !isNaN(parseFloat(value.value)))
 	        {
 	          var index = value.value.indexOf('.');
@@ -276,7 +277,7 @@
 	            index = value.value.length;
 	            value.value =value.value+".000";
 	          }
-	          var format = formatArray[selected[0]][selected[1]];
+	          var format = T.formatArray[selected[0]][selected[1]];
 	          switch(format.type[format.index])
 	          {
 	            case formatOption.ZERO:
@@ -367,8 +368,8 @@
           T.URFlag = T.URTypes.NORMAL;
 				var selected = ht.getSelected();
 				var isFunction = false
-				var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-				if(func!== undefined)
+				var func = T.funcTracker[selected[0]*ht.countRows()+selected[1]];
+				if(func!= undefined)
 	        isFunction = true;
 				/*for(var i = 0; i < funcTracker.length; i++) {
 					if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
@@ -453,15 +454,15 @@
 			{
 	      if(ib.recentlyChanged)
 	      {
-	        func = funcTracker[currSelect[0]*ht.countRows()+currSelect[1]];
-	        if(func!==undefined)
+	        func = T.funcTracker[currSelect[0]*ht.countRows()+currSelect[1]];
+	        if(func!=undefined)
 	          ht.setDataAtCell(currSelect[0], currSelect[1], func.funcString);
 	        ib.recentlyChanged = false;
 	      }
 				var selected = ht.getSelected();
 	      var isFunction = false;
-				var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-				if(func!== undefined)
+				var func = T.funcTracker[selected[0]*ht.countRows()+selected[1]];
+				if(func!= undefined)
 	        isFunction = true;
 				/*for(var i = 0; i < funcTracker.length; i++) {
 					if(funcTracker[i] !== undefined && funcTracker[i].row == selected[0] && funcTracker[i].col == selected[1]) {
@@ -500,8 +501,8 @@
 			if(currSelect!==undefined && selected[0]==selected[2] && selected[1]==selected[3] &&
 			selected[0]==currSelect[0] && selected[1]==currSelect[1])
 	      meditorManager.openEditor();
-			var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
-			if(func!==undefined)
+			var func = T.funcTracker[selected[0]*ht.countRows()+selected[1]];
+			if(func!=undefined)
 			{
 	      meditorManager.getActiveEditor().setValue(func.funcString);
 	    }
@@ -523,6 +524,13 @@
 	  });
 	  
 	  var fillerArray = [];
+	  var data = T.WDS.loadExerciseData(2, figNum);
+	  var reload = false;
+	  if(data != null)
+	  {
+      reload = true;
+      data = JSON.parse(data);
+	  }
 	  switch(figNum)
 	  {
       case 3:
@@ -653,6 +661,26 @@
       ht.setDataAtCell(6,3, "");
         break;
       default:
+        if(reload)
+        {
+        T.funcTracker = data.funcTracker;
+        T.formatArray = data.formTracker;
+        var rows = data.rows;
+        var cols = data.cols;
+        if(T.funcTracker.length!=0 && rows!=undefined && cols)
+        {
+        for(var i=0; i<=rows; i++)
+        {
+          fillerArray[i] = [];
+          for(var k=0; k<=cols; k++)
+          {
+            if(T.funcTracker[i*ht.countRows()+k]!=null)
+              fillerArray[i][k] = T.funcTracker[i*ht.countRows()+k].funcString;
+          }
+        }
+        ht.populateFromArray(0,0,fillerArray,rows,cols);
+        }
+        }
         break;
 	  }
     var p = ht.$table;
@@ -679,10 +707,10 @@
 
 	function fillFuncTracker(selected)
 	{
-	  if(funcTracker[selected[0]*ht.countRows()+selected[1]] === undefined)
+	  if(T.funcTracker[selected[0]*ht.countRows()+selected[1]] === undefined)
 		{
-	    funcTracker[selected[0]*ht.countRows()+selected[1]] = {};
-	    var func = funcTracker[selected[0]*ht.countRows()+selected[1]];
+	    T.funcTracker[selected[0]*ht.countRows()+selected[1]] = {};
+	    var func = T.funcTracker[selected[0]*ht.countRows()+selected[1]];
 	    func.row=selected[0];
 	    func.col=selected[1];
 		}
@@ -715,4 +743,18 @@
     AE = addElements;
     FP = functionParse;
 	}
+	
+	$(window).on("beforeunload", function()
+	{
+    T.WDS.eraseExerciseData(2,figNum);
+    var dataPayload = {};
+    dataPayload.funcTracker = T.funcTracker;
+    dataPayload.formTracker = T.formatArray;
+    dataPayload.rows = ht.countRows();
+    dataPayload.cols = ht.countRows();
+    var dataString = JSON.stringify(dataPayload);
+    console.log(dataString);
+    T.WDS.saveExerciseData(2, figNum, dataString);
+  });
+	
 }

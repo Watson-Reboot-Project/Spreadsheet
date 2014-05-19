@@ -223,6 +223,7 @@ Handsontable.Core = function (rootElement, userSettings, EF) {
   //optionally passing in a place where externalities can be set through getter and setter
   //methods.
   externalForward = EF;
+  this.externalForward = EF;
   var $document = $(document.documentElement);
   var $body = $(document.body);
   this.guid = 'ht_' + Handsontable.helper.randomString(); //this is the namespace for global events
@@ -2447,6 +2448,7 @@ Handsontable.TableView = function (instance) {
   table.appendChild(this.THEAD);
   this.TBODY = document.createElement('TBODY');
   table.appendChild(this.TBODY);
+  table.daddy = this;
 
   instance.$table = $(table);
   instance.rootElement.prepend(instance.$table);
@@ -2811,16 +2813,17 @@ Handsontable.TableView.prototype.appendColHeader = function (col, TH) {
   var that = this;
   $(DIV).on("vmousedown", function(evt)
     {
-      timevert = setInterval(function()
+      var EF = that.instance.externalForward;
+      EF.timevert = setInterval(function()
       {
         that.wt.scrollVertical(-1).draw();
-      }, scrollInterval);
+      }, EF.scrollInterval);
       
     });
     
     $(DIV).on("vmouseup", function(evt)
     {
-      clearInterval(timevert);
+      clearInterval(that.instance.externalForward.timevert);
     });
 
   this.wt.wtDom.fastInnerHTML(SPAN, this.instance.getColHeader(col));
@@ -12769,16 +12772,16 @@ WalkontableTable.prototype._doDraw = function () {
           var yay = TR.appendChild(document.createElement('TH'));
           $(yay).on("vmousedown", function(evt)
           {
-            timehor = setInterval(function()
+            that.TABLE.daddy.instance.externalForward.timehor = setInterval(function()
             {
               that.instance.scrollHorizontal(-1).draw();
-            }, scrollInterval);
+            }, that.TABLE.daddy.instance.externalForward.scrollInterval);
       
           });
     
           $(yay).on("vmouseup", function(evt)
           {
-            clearInterval(timehor);
+            clearInterval(that.TABLE.daddy.instance.externalForward.timehor);
           });
           
           }
