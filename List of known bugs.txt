@@ -1,0 +1,5 @@
+Occasionally cells will be copied into additional locations when performing operations over large selection.
+Probably something within handsontable.populateFromArray (ctrl+f "Disabled the nature of handsontable wrapping")
+When saving assignments to local storage, the type of cell format is saved inside an array of arrays for undo/redo and this array can
+increase in size infinitely and is not cleared. Should probably flatten the indexed arrays to the last index and first index(first index is always cell formatting).
+Also, mobile click events need to be rechecked after changing source files for multiple instances because the main developer does not have a mobile device and touch events have been tested on desktop and mobile phone emulators.
