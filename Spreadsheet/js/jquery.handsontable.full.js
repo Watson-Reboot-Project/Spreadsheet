@@ -17,6 +17,7 @@
   * MITNOTEM refers to my notes about mobile development
   */
 /*jslint white: true, browser: true, plusplus: true, indent: 4, maxerr: 50 */
+var externalForward;
 
 var Handsontable = { //class namespace
   extension: {}, //extenstion namespace
@@ -201,7 +202,7 @@ Handsontable.activeGuid = null;
  * @param userSettings
  * @constructor
  */
-Handsontable.Core = function (rootElement, userSettings) {
+Handsontable.Core = function (rootElement, userSettings, EF) {
   var priv
     , datamap
     , grid
@@ -216,6 +217,13 @@ Handsontable.Core = function (rootElement, userSettings) {
   Handsontable.helper.extend(GridSettings.prototype, expandType(userSettings));
 
   this.rootElement = rootElement;
+  //MITCHELLSNOTE:
+  //I've decided that in my programs, I need access to certain parts of handsontable
+  //that are currently only accessible within handsontable.full.js. So, what I'm dong is
+  //optionally passing in a place where externalities can be set through getter and setter
+  //methods.
+  externalForward = EF;
+  this.externalForward = EF;
   var $document = $(document.documentElement);
   var $body = $(document.body);
   this.guid = 'ht_' + Handsontable.helper.randomString(); //this is the namespace for global events
@@ -489,6 +497,16 @@ Handsontable.Core = function (rootElement, userSettings) {
 
         case 'overwrite' :
         default:
+          //MITCHELLSNOTE
+          //A basic overdo of what I did here:
+          //Disabled the nature of handsontable wrapping during populateFromArray
+          //I did this by providing two checks before setData-
+          //if the input array index is undefined, simply push what is already in the table.
+          //If we have already looped through the index of the input array, push what is already in the table.
+          //We only insert new values into the table if this is the first time that a valid entry for
+          //the array is indexed.
+          var redo = false;
+          var c2 = start.row, r2 = start.col;
           // overwrite and other not specified options
           current.row = start.row;
           current.col = start.col;
@@ -498,22 +516,30 @@ Handsontable.Core = function (rootElement, userSettings) {
             }
             current.col = start.col;
             clen = input[r] ? input[r].length : 0;
+            redo = false;
             for (c = 0; c < clen; c++) {
               if ((end && current.col > end.col) || (!priv.settings.minSpareCols && current.col > instance.countCols() - 1) || (current.col >= priv.settings.maxCols)) {
                 break;
               }
               if (!instance.getCellMeta(current.row, current.col).readOnly) {
+                if(input[r][c]!==undefined && !redo)
                 setData.push([current.row, current.col, input[r][c]]);
+                else
+                  setData.push([current.row, current.col, instance.getDataAtCell(r2, c2)]);
               }
               current.col++;
-              if (end && c === clen - 1) {
+              if (end && c === clen - 1)
+              {
                 c = -1;
+                redo = true;
               }
+              c2++;
             }
             current.row++;
             if (end && r === rlen - 1) {
               r = -1;
             }
+            r2++;
           }
           instance.setDataAtCell(setData, null, null, source || 'populateFromArray');
           break;
@@ -652,7 +678,7 @@ Handsontable.Core = function (rootElement, userSettings) {
       }
       instance.view.render();
       if (selection.isSelected() && !keepEditor) {
-        editorManager.prepareEditor();
+        editorManager.prepareEditor(externalForward);
       }
     },
 
@@ -986,11 +1012,12 @@ Handsontable.Core = function (rootElement, userSettings) {
     instance.PluginHooks.run('beforeInit');
 
     this.view = new Handsontable.TableView(this);
-    editorManager = new Handsontable.EditorManager(instance, priv, selection, datamap);
+    editorManager = new Handsontable.EditorManager(instance, priv, selection, datamap, externalForward);
     //MITCHELLSNOTE
     //jquery does not allow access to the editor manager normally,
     //but I would very much like to have it.
-    meditorManager = editorManager;
+    if(externalForward!==undefined)
+      externalForward.setMEditorManager(editorManager);
 
     this.updateSettings(priv.settings, true);
     this.parseSettingsFromDOM();
@@ -1188,6 +1215,7 @@ Handsontable.Core = function (rootElement, userSettings) {
    * @param {String} source String that identifies how this change will be described in changes array (useful in onChange callback)
    */
   this.setDataAtCell = function (row, col, value, source) {
+    
     var input = setDataInputToArray(row, col, value)
       , i
       , ilen
@@ -1213,7 +1241,6 @@ Handsontable.Core = function (rootElement, userSettings) {
     if (!source && typeof row === "object") {
       source = col;
     }
-
     validateChanges(changes, source, function () {
       applyChanges(changes, source);
     });
@@ -2352,7 +2379,7 @@ DefaultSettings.prototype = {
 };
 Handsontable.DefaultSettings = DefaultSettings;
 
-$.fn.handsontable = function (action) {
+$.fn.handsontable = function (action, externalForward) {
   var i
     , ilen
     , args
@@ -2368,7 +2395,7 @@ $.fn.handsontable = function (action) {
       instance.updateSettings(userSettings);
     }
     else {
-      instance = new Handsontable.Core($this, userSettings);
+      instance = new Handsontable.Core($this, userSettings, externalForward);
       $this.data('handsontable', instance);
       instance.init();
     }
@@ -2421,6 +2448,7 @@ Handsontable.TableView = function (instance) {
   table.appendChild(this.THEAD);
   this.TBODY = document.createElement('TBODY');
   table.appendChild(this.TBODY);
+  table.daddy = this;
 
   instance.$table = $(table);
   instance.rootElement.prepend(instance.$table);
@@ -2764,6 +2792,7 @@ Handsontable.TableView.prototype.appendRowHeader = function (row, TH) {
   else {
     var DIV = document.createElement('DIV');
     DIV.className = 'relative';
+    var that = this;
     this.wt.wtDom.fastInnerText(DIV, '\u00A0');
     this.wt.wtDom.empty(TH);
     TH.appendChild(DIV);
@@ -2781,6 +2810,21 @@ Handsontable.TableView.prototype.appendColHeader = function (col, TH) {
 
   DIV.className = 'relative';
   SPAN.className = 'colHeader';
+  var that = this;
+  $(DIV).on("vmousedown", function(evt)
+    {
+      var EF = that.instance.externalForward;
+      EF.timevert = setInterval(function()
+      {
+        that.wt.scrollVertical(-1).draw();
+      }, EF.scrollInterval);
+      
+    });
+    
+    $(DIV).on("vmouseup", function(evt)
+    {
+      clearInterval(that.instance.externalForward.timevert);
+    });
 
   this.wt.wtDom.fastInnerHTML(SPAN, this.instance.getColHeader(col));
   DIV.appendChild(SPAN);
@@ -2891,7 +2935,8 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
 (function(Handsontable){
   'use strict';
 
-  Handsontable.EditorManager = function(instance, priv, selection){
+  Handsontable.EditorManager = function(instance, priv, selection, externalForward){
+    this.externalForward = externalForward;
     var that = this;
     var $document = $(document);
     var keyCodes = Handsontable.helper.keyCode;
@@ -2998,7 +3043,7 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
                 case keyCodes.BACKSPACE:
                 case keyCodes.DELETE:
                   selection.empty(event);
-                  that.prepareEditor();
+                  that.prepareEditor(externalForward);
                   event.preventDefault();
                   break;
 
@@ -3158,13 +3203,13 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
     /**
      * Prepare text input to be displayed at given grid cell
      */
-    this.prepareEditor = function () {
+    this.prepareEditor = function (externalForward) {
 
       if (activeEditor && activeEditor.isWaiting()){
 
         this.closeEditor(false, false, function(dataSaved){
           if(dataSaved){
-            that.prepareEditor();
+            that.prepareEditor(externalForward);
           }
         });
 
@@ -3181,7 +3226,7 @@ Handsontable.TableView.prototype.maximumVisibleElementHeight = function (top) {
       var editorClass = instance.getCellEditor(cellProperties);
       activeEditor = Handsontable.editors.getEditor(editorClass, instance);
 
-      activeEditor.prepare(row, col, prop, td, originalValue, cellProperties);
+      activeEditor.prepare(row, col, prop, td, originalValue, cellProperties, externalForward);
 
     };
 
@@ -4677,7 +4722,8 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
     this.state = Handsontable.EditorState.VIRGIN;
 	//MITCHELLSNOTE
-	currentEditor = this;
+	if(externalForward!==undefined)
+    externalForward.setCurrentEditor(this);
 	//MITCHELLSNOTE
   };
 
@@ -7293,7 +7339,6 @@ Handsontable.PluginHooks = new Handsontable.PluginHookClass();
       tmp.table = d.createElement('table');
       tmp.theadTh = d.createElement('th');
       tmp.table.appendChild(d.createElement('thead')).appendChild(d.createElement('tr')).appendChild(tmp.theadTh);
-
       tmp.tableStyle = tmp.table.style;
       tmp.tableStyle.tableLayout = 'auto';
       tmp.tableStyle.width = 'auto';
@@ -9056,7 +9101,6 @@ function Storage(prefix) {
       this.ignoreNewActions = true;
       action.undo(this.instance);
       this.ignoreNewActions = false;
-
       this.undoneActions.push(action);
     }
   };
@@ -9070,8 +9114,10 @@ function Storage(prefix) {
 
       this.ignoreNewActions = true;
       action.redo(this.instance);
-      this.ignoreNewActions = true;
-
+      //MITCHELLSNOTe
+      //Wow. This was set to true. Clearly a bug. I should really notify the
+      //people who made this code.
+      this.ignoreNewActions = false;
       this.doneActions.push(action);
     }
   };
@@ -9356,7 +9402,8 @@ if (typeof Handsontable !== 'undefined') {
     else {
       dragToScroll.setBoundaries(instance.$table[0].getBoundingClientRect());
     }
-
+    //MITCHELLSNOTE
+    // I'm actually really annoyed with the dragtoScroll feature, so I'm removing it.
     dragToScroll.setCallback(function (scrollX, scrollY) {
       if (scrollX < 0) {
         if (scrollHandler) {
@@ -10883,7 +10930,6 @@ function WalkontableEvent(instance) {
     if (that.instance.hasSetting('onCellMouseOver')) {
       var TABLE = that.instance.wtTable.TABLE;
       var TD = that.wtDom.closest(event.target, ['TD', 'TH'], TABLE);
-      //console.log(that.wtDom.isChildOf(TD, TABLE));
       //MitchellsNoteM: probably going to need to add this back for performance.
       if (TD && TD !== lastMouseOver && that.wtDom.isChildOf(TD, TABLE)) {
         lastMouseOver = TD;
@@ -11154,7 +11200,6 @@ WalkontableScroll.prototype.scrollVertical = function (delta) {
     , fixedCount = instance.getSetting('fixedRowsTop')
     , total = instance.getSetting('totalRows')
     , maxSize = instance.wtViewport.getViewportHeight();
-
   if (total > 0) {
     newOffset = this.scrollLogicVertical(delta, offset, total, fixedCount, maxSize, function (row) {
       if (row - offset < fixedCount && row - offset >= 0) {
@@ -11429,6 +11474,18 @@ WalkontableScrollbar.prototype.init = function () {
       that.onScroll(dragDelta);
     }
   });
+  if(this.dragdealer.vertical)
+    {
+      if (typeof(vertDragDealer) !== 'undefined')
+      vertDragDealer = this;
+    }
+    else
+    {
+       if(typeof(horDragDealer) !== 'undefined')
+       {
+        horDragDealer = this;
+       }
+    }
   this.skipRefresh = false;
 };
 
@@ -11521,7 +11578,7 @@ WalkontableScrollbar.prototype.refresh = function () {
     sliderSize = tableHeight - 2; //2 is sliders border-width
     this.sliderStyle.float = "right";
     this.sliderStyle.top = this.instance.wtDom.offset(this.$table[0]).top - this.instance.wtDom.offset(this.container).top + 'px';
-    this.sliderStyle.left = $(".htcore")[0].offsetWidth + 'px'; //1 is sliders border-width
+    this.sliderStyle.left = this.$table[0].offsetWidth + 'px'; //1 is sliders border-width
     this.sliderStyle.height = Math.max(sliderSize, 0) + 'px';
     this.sliderStyle.width = "32px";
   }
@@ -11538,10 +11595,14 @@ WalkontableScrollbar.prototype.refresh = function () {
   if (handleSize < 10) {
     handleSize = 15;
   }
+  //I really want the handlesize to be standard and larger.
+  //MITCHELLSNOTEM
+  handleSize = 80;
+  //MITCHLLSNOTEM
 
   handlePosition = Math.floor(sliderSize * (this.offset / this.total));
   if (handleSize + handlePosition > sliderSize) {
-    handlePosition = sliderSize - handleSize;
+    handlePosition = sliderSize- handleSize;
   }
 
   if (this.type === 'vertical') {
@@ -11551,10 +11612,10 @@ WalkontableScrollbar.prototype.refresh = function () {
 
   }
   else { //horizontal
-    this.handleStyle.width = handleSize/4 + 'px';
+    this.handleStyle.width = handleSize + 'px';
     this.handleStyle.height = "32px";
-    //this.handleStyle.left = handlePosition + 'px';
-    this.handleStyle.left = "0px";
+    this.handleStyle.left = handlePosition + 'px';
+    //this.handleStyle.left = "0px";
     
   }
 
@@ -12162,7 +12223,7 @@ function WalkontableSettings(instance, settings) {
     //presentation mode
     scrollH: 'auto', //values: scroll (always show scrollbar), auto (show scrollbar if table does not fit in the container), none (never show scrollbar)
     scrollV: 'auto', //values: see above
-    nativeScrollbars: false, //values: false (dragdealer), true (native)
+    nativeScrollbars: true, //values: false (dragdealer), true (native)
     stretchH: 'hybrid', //values: hybrid, all, last, none
     currentRowClassName: null,
     currentColumnClassName: null,
@@ -12704,12 +12765,26 @@ WalkontableTable.prototype._doDraw = function () {
       if (cloneLimit !== void 0 && r === cloneLimit) {
         break; //we have as much rows as needed for this clone
       }
-
+      var that  = this;
       if (r >= this.tbodyChildrenLength || (this.verticalRenderReverse && r >= this.rowFilter.fixedCount)) {
         TR = document.createElement('TR');
         for (c = 0; c < displayThs; c++) {
-          TR.appendChild(document.createElement('TH'));
-        }
+          var yay = TR.appendChild(document.createElement('TH'));
+          $(yay).on("vmousedown", function(evt)
+          {
+            that.TABLE.daddy.instance.externalForward.timehor = setInterval(function()
+            {
+              that.instance.scrollHorizontal(-1).draw();
+            }, that.TABLE.daddy.instance.externalForward.scrollInterval);
+      
+          });
+    
+          $(yay).on("vmouseup", function(evt)
+          {
+            clearInterval(that.TABLE.daddy.instance.externalForward.timehor);
+          });
+          
+          }
         if (this.verticalRenderReverse && r >= this.rowFilter.fixedCount) {
           this.TBODY.insertBefore(TR, this.TBODY.childNodes[this.rowFilter.fixedCount] || this.TBODY.firstChild);
         }
@@ -13218,12 +13293,21 @@ var Cursor =
 	},
 	setEvent: function(type)
 	{
+    
+    //MITCHELLSNOTEM
+    //So this is annoying. This type of movement isn't captured on phones.
 		var moveHandler = document['on' + type + 'move'] || function(){};
 		document['on' + type + 'move'] = function(e)
 		{
 			moveHandler(e);
 			Cursor.refresh(e);
 		}
+		$(document).bind("vmousemove", function(e)
+		{
+      moveHandler(e);
+      Cursor.refresh(e);
+		});
+		//MITCHELLSNOTEM
 	},
 	refresh: function(e)
 	{
@@ -13231,7 +13315,8 @@ var Cursor =
 		{
 			e = window.event;
 		}
-		if(e.type == 'mousemove')
+		//MITCHELLNOTEM
+		if(e.type == 'mousemove' || e.type == 'vmousemove')
 		{
 			this.set(e);
 		}
@@ -13242,7 +13327,7 @@ var Cursor =
 	},
 	set: function(e)
 	{
-		if(e.pageX || e.pageY)
+		if(true)
 		{
 			this.x = e.pageX;
 			this.y = e.pageY;
@@ -13404,15 +13489,17 @@ Dragdealer.prototype =
 		{
 			return false;
 		}
-		this.handle.onmousedown = this.handle.ontouchstart = function(e)
+		//MITCHELLSNOTEM
+		//Need to replace these functions with more mobile friendly ones.
+		/*this.handle.onmousedown = this.handle.ontouchstart = function(e)
 		{
 			self.handleDownHandler(e);
 		};
+		
 		this.wrapper.onmousedown = this.wrapper.ontouchstart = function(e)
 		{
 			self.wrapperDownHandler(e);
 		};
-		var mouseUpHandler = document.onmouseup || function(){};
 		document.onmouseup = function(e)
 		{
 			mouseUpHandler(e);
@@ -13424,16 +13511,33 @@ Dragdealer.prototype =
 			touchEndHandler(e);
 			self.documentUpHandler(e);
 		};
+		*/
+		$(this.handle).on("vmousedown", function(e)
+		{
+      e.preventDefault();
+      self.handleDownHandler(e);
+		});
+		var mouseUpHandler = document.onmouseup || function(){};
+		$(document).on("vmouseup", function(e)
+		{
+      mouseUpHandler(e);
+      self.documentUpHandler(e);
+		});
 		var resizeHandler = window.onresize || function(){};
 		window.onresize = function(e)
 		{
 			resizeHandler(e);
 			self.documentResizeHandler(e);
 		};
-		this.wrapper.onmousemove = function(e)
+		$(this.wrapper).on("vmousemove", function(e)
 		{
-			self.activity = true;
-		}
+      e.preventDefault();
+      self.activity = true;
+		});
+		//this.wrapper.onmousemove = function(e)
+		//{
+		//	self.activity = true;
+		//}
 		this.wrapper.onclick = function(e)
 		{
 			return !self.activity;
@@ -13446,7 +13550,6 @@ Dragdealer.prototype =
 	{
 		this.activity = false;
 		Cursor.refresh(e);
-		
 		this.preventDefaults(e, true);
 		this.startDrag();
 	},
@@ -13535,12 +13638,22 @@ Dragdealer.prototype =
 
 		this.setWrapperOffset();
 		this.setBounds();
-
+    /*
+    //MITCHELLSNOTEM.
 		this.offset.mouse = [
 			Cursor.x - Position.get(this.handle)[0],
 			Cursor.y - Position.get(this.handle)[1]
 		];
-		
+		//The position seems off until I figure out why, I figure:
+		//As a general rule, the offset cannot be larger than the handle length*/
+		var handleWidth = $(this.handle).width();
+		var handleHeight = $(this.handle).height();
+		/*if(Math.abs(this.offset.mouse[0])>handleWidth)
+      this.offset.mouse[0] = handleWidth;
+     if(Math.abs(this.offset.mouse[1])>handleHeight)
+      this.offset.mouse[1] = handleHeight;
+    */  
+    this.offset.mouse = [handleWidth/2,handleHeight/2];
 		this.dragging = true;
 	},
 	stopDrag: function()
@@ -13593,7 +13706,6 @@ Dragdealer.prototype =
 		if(this.dragging)
 		{
 			var prevTarget = this.groupClone(this.value.target);
-			
 			var offset = [
 				Cursor.x - this.offset.wrapper[0] - this.offset.mouse[0],
 				Cursor.y - this.offset.wrapper[1] - this.offset.mouse[1]
